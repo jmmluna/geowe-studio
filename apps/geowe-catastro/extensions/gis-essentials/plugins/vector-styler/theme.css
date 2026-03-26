@@ -1,0 +1,25 @@
+.styler-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 5px;
+}
+.styler-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.styler-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+.geowe-ui-color-picker {
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}

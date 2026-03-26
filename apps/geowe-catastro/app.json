@@ -1,0 +1,20 @@
+{
+    "id": "geowe-catastro",
+    "name": "GeoWE Catastro Expert",
+    "version": "1.0.0",
+    "description": "Aplicación especializada en la gestión de capas catastrales y SIGPAC, con herramientas de estilo vectorial avanzadas.",
+    "slogan": "Catastro y SIGPAC de alta precisión",
+    "logo": "logo-catastro.png",
+    "config": {
+        "showPluginManagement": false,
+        "disableInternalPlugins": [
+            "plugin-info-plugin",
+            "layer-manager-plugin",
+            "layer-catalog-plugin"
+        ]
+    },
+    "extensions": [
+        "gis-essentials"
+    ],
+    "plugins": []
+}

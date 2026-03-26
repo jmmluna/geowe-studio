@@ -1,0 +1,305 @@
+@import "ol/ol.css";
+@import "material-icons/iconfont/material-icons.css";
+
+/* Variables globales de la aplicación */
+:root {
+  --primary-color: #34495e;
+  --accent-color: #3498db;
+  --toolbar-bg: #2c3e50;
+  --sidebar-bg: #ffffff;
+  --text-main: #2c3e50;
+  --text-light: #7f8c8d;
+  --border-color: #ecf0f1;
+}
+
+/* Estilos del toolbar de plugins (global para evitar encapsulación de Angular) */
+.plugin-toolbar {
+  background: #2c3e50 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 0;
+  z-index: 20;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.toolbar-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toolbar-btn:hover {
+  background: #3498db;
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(52, 152, 219, 0.5);
+}
+
+.toolbar-btn .material-icons,
+.toolbar-btn:hover .material-icons {
+  font-size: 22px;
+  color: #ffffff !important;
+  pointer-events: none;
+}
+
+html, body {
+
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* GeoWE UI System - Design Tokens */
+:root {
+  --geowe-primary: #34495e;
+  --geowe-accent: #3498db;
+  --geowe-success: #27ae60;
+  --geowe-danger: #e74c3c;
+  --geowe-bg-light: #f8f9fa;
+  --geowe-border: #ecf0f1;
+  --geowe-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --geowe-radius: 10px;
+}
+
+/* GeoWE UI Components */
+.geowe-ui-section {
+  margin-bottom: 20px;
+}
+
+.geowe-ui-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--geowe-border);
+  color: var(--geowe-primary);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.geowe-ui-section-header .material-icons {
+  font-size: 18px;
+  color: var(--geowe-accent);
+}
+
+.geowe-ui-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.geowe-ui-btn {
+  padding: 10px 16px;
+  border-radius: var(--geowe-radius);
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.geowe-ui-btn:active {
+  transform: scale(0.96);
+}
+
+.geowe-ui-btn-primary {
+  background: var(--geowe-accent);
+  color: white;
+}
+
+.geowe-ui-btn-primary:hover {
+  background: #2980b9;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.geowe-ui-btn-secondary {
+  background: white;
+  color: var(--geowe-primary);
+  border: 1px solid var(--geowe-border);
+}
+
+.geowe-ui-btn-secondary:hover {
+  background: var(--geowe-bg-light);
+  border-color: var(--geowe-accent);
+}
+
+.geowe-ui-btn-icon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.geowe-ui-btn-icon:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: var(--geowe-accent);
+}
+
+.geowe-ui-btn-icon .material-icons {
+  font-size: 18px;
+}
+
+.geowe-ui-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px; /* Más compacto */
+  background: white;
+  border: 1px solid var(--geowe-border);
+  border-radius: var(--geowe-radius);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.geowe-ui-checkbox-row:hover {
+  border-color: var(--geowe-accent);
+  background: rgba(52, 152, 219, 0.03);
+}
+
+/* Estilo para cuando el checkbox está dentro de una lista (menos "card") */
+.geowe-ui-list-item .geowe-ui-checkbox-row {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+}
+
+.geowe-ui-list-item .geowe-ui-checkbox-row:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* Custom modern checkbox */
+.geowe-ui-checkbox-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--geowe-border);
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+
+.geowe-ui-checkbox-row input[type="checkbox"]:checked {
+  background: var(--geowe-accent);
+  border-color: var(--geowe-accent);
+}
+
+.geowe-ui-checkbox-row input[type="checkbox"]:checked::after {
+  content: "check"; /* Material icon name */
+  font-family: 'Material Icons';
+  color: white;
+  font-size: 16px;
+}
+
+.geowe-ui-checkbox-row span {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--geowe-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+
+/* Modern File Input */
+.geowe-ui-file-container {
+  position: relative;
+  width: 100%;
+}
+
+.geowe-ui-file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.geowe-ui-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--geowe-bg-light);
+  border: 2px dashed var(--geowe-border);
+  border-radius: var(--geowe-radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.geowe-ui-file-label:hover {
+  border-color: var(--geowe-accent);
+  background: white;
+  color: var(--geowe-accent);
+}
+
+.geowe-ui-file-label .material-icons {
+  font-size: 20px;
+}
+
+
+.geowe-ui-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--geowe-border);
+  border-radius: var(--geowe-radius);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.geowe-ui-input:focus {
+  border-color: var(--geowe-accent);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.geowe-ui-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.1);
+}

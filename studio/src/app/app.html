@@ -1,0 +1,111 @@
+<div class="app-layout" [class.sidebar-collapsed]="!isSidebarVisible">
+
+  <!-- Nueva Barra de Herramientas de Plugins (Iconos) -->
+  <div class="plugin-toolbar">
+    <div class="toolbar-logo">
+      <img [src]="appLogo" alt="GeoWE Logo" class="app-logo" (click)="showAppInfo()" style="cursor: pointer;" title="Información de la Aplicación">
+    </div>
+
+    
+    <div class="toolbar-actions">
+      <!-- Botón de Toggle Sidebar -->
+      <button class="toolbar-btn toggle-sidebar-btn" (click)="toggleSidebar()" [class.active]="isSidebarVisible" title="Alternar barra lateral">
+        <span class="material-icons">{{ isSidebarVisible ? 'menu_open' : 'menu' }}</span>
+      </button>
+
+      <button *ngFor="let btn of uiButtons" 
+              (click)="executeCommand(btn.id)" 
+              class="toolbar-btn" 
+              [class.active]="btn.isActive"
+              [title]="btn.label">
+        <span class="material-icons">{{ btn.icon || 'extension' }}</span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="sidebar" *ngIf="isSidebarVisible">
+
+    <div class="sidebar-header">
+      <h1>{{appTitle}}</h1>
+      <p>{{appSlogan}}</p>
+    </div>
+
+    <!-- Gestión de Plugins -->
+    <div class="plugin-section" *ngIf="showPluginManagement">
+      <div class="section-title">
+        <span class="material-icons">settings_input_component</span>
+        <h3>Gestión de Plugins</h3>
+      </div>
+
+
+      <div class="control-group">
+        <label>Cargar Archivo Local:</label>
+        <div class="file-input-wrapper">
+          <button class="btn-secondary">Instalar App/Extensión/Plugin (.gapp, .gext, .gplugin, .js)</button>
+          <input type="file" accept=".js,.zip,.gplugin,.gext,.gapp" (change)="onFileSelected($event)" />
+        </div>
+
+
+      </div>
+
+      <div class="control-group">
+        <label>URL de módulo Remoto:</label>
+        <div class="input-row">
+          <input #remoteUrl type="text" placeholder="https://cdn.com/plugin.js" />
+          <button class="btn-primary" (click)="loadRemote(remoteUrl.value)">
+            <span class="material-icons">download</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="map-container">
+    <div #mapElement class="map"></div>
+
+    <!-- Barra de Estado de Plugins -->
+    <div *ngIf="statusMessage" class="status-bar-container">
+      <div class="status-bar">
+        <span class="material-icons">info</span>
+        <span>{{ statusMessage }}</span>
+        <button (click)="statusMessage = ''" class="status-close">×</button>
+      </div>
+    </div>
+
+    <div class="floating-panels">
+      <ng-container *ngFor="let panel of uiPanels">
+        <div *ngIf="!panel.isModal" class="plugin-panel" [id]="'panel-' + panel.id" [class.collapsed]="!panel.isExpanded">
+          <div class="panel-header" (click)="togglePanelExpansion(panel.id)">
+            <div class="header-main">
+              <span class="material-icons expansion-icon" style="font-size: 18px; margin-right: 8px;">{{ panel.isExpanded ? 'expand_more' : 'chevron_right' }}</span>
+              <span>{{ panel.title }}</span>
+            </div>
+            <button (click)="$event.stopPropagation(); closePanel(panel.id)">×</button>
+          </div>
+          <div class="panel-content" *ngIf="panel.isExpanded" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id"></div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Modales de Plugins -->
+    <div class="plugin-modal-overlay" *ngIf="hasActiveModal()">
+      <div *ngFor="let panel of uiPanels">
+        <div *ngIf="panel.isModal" class="plugin-panel modal-panel" [id]="'panel-' + panel.id">
+          <div class="panel-header">
+            <div class="header-main">
+              <span class="material-icons" style="font-size: 20px; color: var(--accent-color);">extension</span>
+              <span>{{ panel.title }}</span>
+            </div>
+            <button (click)="closePanel(panel.id)">×</button>
+          </div>
+          <div class="panel-content" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id"></div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
