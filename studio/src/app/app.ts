@@ -163,6 +163,16 @@ export class App implements OnInit {
 
     // 2. Cargar plugin interno por defecto (Layer Catalog PNOA/IGN/Catastro)
     this.loadInternalPlugin();
+
+    // 3. Auto-carga desde parámetros URL (Fase 17)
+    // Soportamos ?load=, ?plugin=, ?app= o ?ext=
+    const params = new URLSearchParams(window.location.search);
+    const remoteUrl = params.get('load') || params.get('plugin') || params.get('app') || params.get('ext');
+    if (remoteUrl) {
+      this.pluginManager.pluginContext.ui.setStatus('Auto-cargando extensión remota...');
+      // setTimeout ayuda a asegurar que los componentes de la vista están listos
+      setTimeout(() => this.pluginManager.loadRemotePlugin(remoteUrl), 500);
+    }
   }
 
 
