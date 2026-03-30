@@ -36,10 +36,10 @@ export class App implements OnInit {
   public uiPanels: any[] = [];
   public statusMessage: string = '';
   public isSidebarVisible = true;
-  
+
   // Propiedades de la Aplicación (.gapp)
-  public appTitle = 'GeoWE Studio';
-  public appSlogan = 'Extensible GIS Platform';
+  public appTitle = 'Cargando...';
+  public appSlogan = '';
   public appLogo = 'logo-geowe.png';
   public showPluginManagement = true;
   private currentAppManifest: any = null;
@@ -54,7 +54,7 @@ export class App implements OnInit {
     private sanitizer: DomSanitizer
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.initMap();
     (window as any).ol = {
       style: { Style, Fill, Stroke }
@@ -119,7 +119,11 @@ export class App implements OnInit {
 
       const vectorLayer = new VectorLayer({
         source: vectorSource,
-        properties: { name: payload.name }
+        properties: { name: payload.name },
+        style: new Style({
+          fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),
+          stroke: new Stroke({ color: '#3498db', width: 2 }),
+        })
       });
 
       this.map.addLayer(vectorLayer);
@@ -144,9 +148,23 @@ export class App implements OnInit {
       }
     });
 
-    // Cargar plugin interno por defecto (Layer Catalog PNOA/IGN/Catastro)
+    this.pluginManager.pluginContext.ui.setStatus('Inicializando plataforma GeoWE...');
+
+    // 1. Cargar configuración base
+    try {
+      const response = await fetch('config/default-app.json');
+      if (response.ok) {
+        const defaultManifest = await response.json();
+        this.applyAppConfig(defaultManifest);
+      }
+    } catch (e) {
+      console.error('No se pudo cargar la configuración por defecto', e);
+    }
+
+    // 2. Cargar plugin interno por defecto (Layer Catalog PNOA/IGN/Catastro)
     this.loadInternalPlugin();
   }
+
 
 
   private initMap() {
@@ -235,7 +253,7 @@ export class App implements OnInit {
     this.appTitle = manifest.name || this.appTitle;
     this.appSlogan = manifest.slogan || this.appSlogan;
     this.showPluginManagement = manifest.config?.showPluginManagement !== false;
-    
+
     if (manifest.logoRaw) {
       this.appLogo = manifest.logoRaw;
     }
@@ -246,10 +264,8 @@ export class App implements OnInit {
 
 
   public showAppInfo() {
-    if (!this.currentAppManifest) {
-      alert(`${this.appTitle} - ${this.appSlogan}\nBase Platform: GeoWE Forge SDK`);
-      return;
-    }
+    if (!this.currentAppManifest) return; // Por seguridad si se pulsa antes de cargar
+
 
     this.pluginManager.pluginContext.ui.addModal({
       id: 'app-info-modal',

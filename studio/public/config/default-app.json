@@ -1,0 +1,12 @@
+{
+    "id": "geowe-studio-edition",
+    "name": "GeoWE Studio Edition",
+    "version": "1.0.0",
+    "description": "La plataforma base de extensibilidad SIG para edición y visualización de datos geográficos con tecnología GeoWE Forge.",
+    "slogan": "Extensible GIS Platform",
+    "logo": "logo-geowe.png",
+    "config": {
+        "showPluginManagement": true,
+        "disableInternalPlugins": []
+    }
+}
