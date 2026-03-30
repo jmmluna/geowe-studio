@@ -15,6 +15,7 @@ import { Style, Fill, Stroke } from 'ol/style';
 import { PluginManagerService } from './core/plugin-manager.service';
 
 import { EventBusService, GeoEvent } from './core/event-bus.service';
+import { SplashScreenComponent } from './core/components/splash-screen/splash-screen.component';
 
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
@@ -24,7 +25,7 @@ import PluginInfoPlugin from './plugins/plugin-info.plugin';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SplashScreenComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -171,7 +172,13 @@ export class App implements OnInit {
     if (remoteUrl) {
       this.pluginManager.pluginContext.ui.setStatus('Auto-cargando extensión remota...');
       // setTimeout ayuda a asegurar que los componentes de la vista están listos
-      setTimeout(() => this.pluginManager.loadRemotePlugin(remoteUrl), 500);
+      setTimeout(async () => {
+        await this.pluginManager.loadRemotePlugin(remoteUrl);
+        this.eventBus.emit({ type: 'app:loadingEnd' });
+      }, 500);
+    } else {
+      // Si no hay carga remota, forzamos el fin de la carga para que el splash desaparezca tras iniciar el core
+      setTimeout(() => this.eventBus.emit({ type: 'app:loadingEnd' }), 500);
     }
   }
 

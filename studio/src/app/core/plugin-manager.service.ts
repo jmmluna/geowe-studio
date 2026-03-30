@@ -19,6 +19,22 @@ export class PluginManagerService {
   private olMap: any;
   private disabledPluginIds = new Set<string>();
 
+  private activeLoads: number = 0;
+
+  private _incrementLoad() {
+    this.activeLoads++;
+    if (this.activeLoads === 1) {
+      this.eventBus.emit({ type: 'app:loadingStart' });
+    }
+  }
+
+  private _decrementLoad() {
+    this.activeLoads--;
+    if (this.activeLoads <= 0) {
+      this.activeLoads = 0;
+      this.eventBus.emit({ type: 'app:loadingEnd' });
+    }
+  }
 
 
   constructor(private eventBus: EventBusService) { }
@@ -300,6 +316,9 @@ export class PluginManagerService {
         this.activePlugins.set(plugin.id, plugin);
         console.log(`Plugin ${plugin.name || plugin.id} activated successfully.`);
         this.eventBus.emit({ type: 'plugin:loaded', payload: plugin.id });
+        
+        // Dar feedback al usuario (muy útil para .js individuales o .gplugin)
+        this.pluginContext.ui.setStatus(`Plugin '${plugin.name || plugin.id}' activado`);
       }
     } catch (error) {
       console.error(`Failed to activate plugin ${plugin.id}:`, error);
@@ -307,75 +326,80 @@ export class PluginManagerService {
   }
 
   public async loadRemotePlugin(urlInput: string): Promise<void> {
-    let url = urlInput;
-    // Autocorrección de URLs web de GitHub a raw.githubusercontent.com para saltar bloqueos CORS
-    if (url.includes('github.com') && (url.includes('/raw/') || url.includes('/blob/'))) {
-      url = url.replace('github.com', 'raw.githubusercontent.com')
-               .replace('/raw/', '/')
-               .replace('/blob/', '/');
-      console.log(`[PluginManager] GitHub URL reescrita a RAW: ${url}`);
-    }
-
-    const isBlob = url.startsWith('blob:');
-    const isJs = url.split('?')[0].split('#')[0].endsWith('.js');
-
-    const urlLower = url.toLowerCase();
-    const isZipBased = urlLower.endsWith('.gplugin') || urlLower.endsWith('.gext') || urlLower.endsWith('.gapp') || urlLower.endsWith('.zip');
-
-    if (isZipBased) {
-      try {
-        console.log(`[PluginManager] Attempting to download remote package from: ${url}`);
-        this.pluginContext.ui.setStatus(`Descargando paquete desde: ${url}`);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        const blob = await response.blob();
-        
-        // Convertir el blob a objeto File para compatibilidad con loadLocalPlugin
-        const fileName = url.split('/').pop() || 'remote-package.zip';
-        const file = new File([blob], fileName, { type: response.headers.get('content-type') || 'application/zip' });
-        
-        await this.loadLocalPlugin(file);
-        return;
-      } catch (e: any) {
-        console.error(`[PluginManager] Failed to download package from ${url}:`, e);
-        let errorMsg = e.message;
-        if (errorMsg === 'Failed to fetch') {
-           errorMsg = 'Error de Red / CORS. Asegúrate de que el archivo existe (los 404 cross-origin se reportan como CORS) y que el servidor permite CORS.';
-        }
-        this.eventBus.emit({ type: 'ui:statusChanged', payload: `Error de descarga: ${errorMsg}` });
-        return;
-      }
-    }
-
-    if (!isBlob && !isJs && (url.endsWith('manifest.json') || !url.includes('.'))) {
-      // Intentar como paquete/manifiesto
-      const baseUrl = url.endsWith('manifest.json') ? url.replace('manifest.json', '') : (url.endsWith('/') ? url : url + '/');
-      await this.loadPackage(baseUrl);
-      return;
-    }
-
-    console.log(`[PluginManager] Attempting to load dynamic plugin from: ${url}`);
-
+    this._incrementLoad();
     try {
-      let moduleUrl = url;
-      if (isJs && !isBlob) {
-        // Fix for raw.githubusercontent.com and other hosts returning text/plain instead of JS
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`HTTP Error: ${resp.status}`);
-        const text = await resp.text();
-        const blob = new Blob([text], { type: 'application/javascript' });
-        moduleUrl = URL.createObjectURL(blob);
+      let url = urlInput;
+      // Autocorrección de URLs web de GitHub a raw.githubusercontent.com para saltar bloqueos CORS
+      if (url.includes('github.com') && (url.includes('/raw/') || url.includes('/blob/'))) {
+        url = url.replace('github.com', 'raw.githubusercontent.com')
+                 .replace('/raw/', '/')
+                 .replace('/blob/', '/');
+        console.log(`[PluginManager] GitHub URL reescrita a RAW: ${url}`);
       }
 
-      const module = await import(moduleUrl);
-      await this.loadPluginFromModule(module);
+      const isBlob = url.startsWith('blob:');
+      const isJs = url.split('?')[0].split('#')[0].endsWith('.js');
 
-      if (moduleUrl !== url) {
-        URL.revokeObjectURL(moduleUrl);
+      const urlLower = url.toLowerCase();
+      const isZipBased = urlLower.endsWith('.gplugin') || urlLower.endsWith('.gext') || urlLower.endsWith('.gapp') || urlLower.endsWith('.zip');
+
+      if (isZipBased) {
+        try {
+          console.log(`[PluginManager] Attempting to download remote package from: ${url}`);
+          this.pluginContext.ui.setStatus(`Descargando paquete desde: ${url}`);
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+          const blob = await response.blob();
+          
+          // Convertir el blob a objeto File para compatibilidad con loadLocalPlugin
+          const fileName = url.split('/').pop() || 'remote-package.zip';
+          const file = new File([blob], fileName, { type: response.headers.get('content-type') || 'application/zip' });
+          
+          await this.loadLocalPlugin(file);
+          return;
+        } catch (e: any) {
+          console.error(`[PluginManager] Failed to download package from ${url}:`, e);
+          let errorMsg = e.message;
+          if (errorMsg === 'Failed to fetch') {
+             errorMsg = 'Error de Red / CORS. Asegúrate de que el archivo existe (los 404 cross-origin se reportan como CORS) y que el servidor permite CORS.';
+          }
+          this.eventBus.emit({ type: 'ui:statusChanged', payload: `Error de descarga: ${errorMsg}` });
+          return;
+        }
       }
-    } catch (e: any) {
-      console.error(`[PluginManager] Critical failure loading plugin from ${url}. Error: ${e.message}`, e);
-      this.eventBus.emit({ type: 'ui:statusChanged', payload: `Error cargando plugin: ${e.message}` });
+
+      if (!isBlob && !isJs && (url.endsWith('manifest.json') || !url.includes('.'))) {
+        // Intentar como paquete/manifiesto
+        const baseUrl = url.endsWith('manifest.json') ? url.replace('manifest.json', '') : (url.endsWith('/') ? url : url + '/');
+        await this.loadPackage(baseUrl);
+        return;
+      }
+
+      console.log(`[PluginManager] Attempting to load dynamic plugin from: ${url}`);
+
+      try {
+        let moduleUrl = url;
+        if (isJs && !isBlob) {
+          // Fix for raw.githubusercontent.com and other hosts returning text/plain instead of JS
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`HTTP Error: ${resp.status}`);
+          const text = await resp.text();
+          const blob = new Blob([text], { type: 'application/javascript' });
+          moduleUrl = URL.createObjectURL(blob);
+        }
+
+        const module = await import(moduleUrl);
+        await this.loadPluginFromModule(module);
+
+        if (moduleUrl !== url) {
+          URL.revokeObjectURL(moduleUrl);
+        }
+      } catch (e: any) {
+        console.error(`[PluginManager] Critical failure loading plugin from ${url}. Error: ${e.message}`, e);
+        this.eventBus.emit({ type: 'ui:statusChanged', payload: `Error cargando plugin: ${e.message}` });
+      }
+    } finally {
+      this._decrementLoad();
     }
   }
 
@@ -436,28 +460,32 @@ export class PluginManagerService {
 
 
   public async loadLocalPlugin(file: File): Promise<void> {
-    if (file.name.endsWith('.zip') || file.name.endsWith('.gplugin')) {
-      await this.loadZip(file);
-      return;
-    }
-
-    if (file.name.endsWith('.gext')) {
-      await this.loadExtension(file);
-      return;
-    }
-
-    if (file.name.endsWith('.gapp')) {
-      await this.loadApp(file);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-
-
+    this._incrementLoad();
     try {
-      await this.loadRemotePlugin(objectUrl);
+      if (file.name.endsWith('.zip') || file.name.endsWith('.gplugin')) {
+        await this.loadZip(file);
+        return;
+      }
+
+      if (file.name.endsWith('.gext')) {
+        await this.loadExtension(file);
+        return;
+      }
+
+      if (file.name.endsWith('.gapp')) {
+        await this.loadApp(file);
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+
+      try {
+        await this.loadRemotePlugin(objectUrl);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
     } finally {
-      URL.revokeObjectURL(objectUrl);
+      this._decrementLoad();
     }
   }
 

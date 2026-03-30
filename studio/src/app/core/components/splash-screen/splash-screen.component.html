@@ -1,0 +1,17 @@
+<div class="geowe-splash-screen" [class.hidden]="!isVisible">
+  <div class="splash-container">
+    <div class="splash-logo-wrapper">
+      <img [src]="logoUrl" alt="GeoWE Logo" class="splash-logo splash-pulse-animation">
+    </div>
+    
+    <div class="splash-spinner">
+      <div class="bounce1"></div>
+      <div class="bounce2"></div>
+      <div class="bounce3"></div>
+    </div>
+    
+    <div class="splash-status-text">
+      {{ statusText }}
+    </div>
+  </div>
+</div>
