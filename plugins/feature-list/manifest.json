@@ -1,0 +1,8 @@
+{
+  "id": "feature-list",
+  "name": "Feature List Data Table",
+  "version": "1.0.0",
+  "description": "Lista los elementos y propiedades de una capa vectorial.",
+  "main": "index.js",
+  "templates": ["feature-list.html"]
+}

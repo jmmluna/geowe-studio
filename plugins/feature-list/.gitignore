@@ -1,0 +1,4 @@
+node_modules/
+dist/
+*.gplugin
+package-lock.json

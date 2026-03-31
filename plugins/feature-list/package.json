@@ -1,0 +1,14 @@
+{
+  "name": "geowe-feature-list-plugin",
+  "version": "1.0.0",
+  "description": "GeoWE Plugin to list features of a layer",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "ol": "^9.0.0",
+    "typescript": "^5.4.0"
+  }
+}
