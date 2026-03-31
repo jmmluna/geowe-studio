@@ -71,11 +71,11 @@ export default {
     const openCatalog = () => {
       // console.log('Abriendo catálogo...'); // Limpieza
 
-      const rasterContent = catalogLayers.raster.map(l => 
+      const rasterContent = catalogLayers.raster.map(l =>
         ctx.ui.components.checkbox(l.name, false, `chk-${l.id}`, { type: 'raster', id: l.id })
       ).join('');
 
-      const vectorContent = catalogLayers.vector.map(l => 
+      const vectorContent = catalogLayers.vector.map(l =>
         ctx.ui.components.checkbox(l.name, false, `chk-${l.id}`, { type: 'vector', id: l.id })
       ).join('');
 
@@ -91,7 +91,7 @@ export default {
       `;
 
 
-      ctx.ui.addPanel({
+      ctx.ui.addModal({
         id: PANEL_ID,
         title: 'Catálogo de Capas',
         content,
@@ -103,7 +103,7 @@ export default {
               const type = cb.getAttribute('data-type');
               const id = cb.getAttribute('data-id');
               const layer = (catalogLayers as any)[type].find((l: any) => l.id === id);
-              
+
               if (layer) {
                 ctx.layers.addWMSLayer(layer.name, layer.url, {
                   'LAYERS': layer.layers,
