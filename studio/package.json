@@ -4,12 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --base-href /geowe-studio/studio/bin/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "forge:pack": "node tools/forge-packager.js"
   },
-
   "prettier": {
     "printWidth": 100,
     "singleQuote": true,
