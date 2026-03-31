@@ -1,7 +1,0 @@
-{
-  "id": "gis-essentials",
-  "name": "GIS Essentials Pack",
-  "version": "1.0.0",
-  "description": "Cargador de GeoJSON y Estilizador Vectorial Pro",
-  "plugins": ["geojson-loader", "vector-styler"]
-}

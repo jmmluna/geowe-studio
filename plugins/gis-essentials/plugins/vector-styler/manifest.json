@@ -1,8 +1,0 @@
-{
-  "id": "vector-styler",
-  "name": "Estilizador Vectorial Pro",
-  "version": "1.2.0",
-  "main": "index.js",
-  "styles": ["theme.css"],
-  "templates": ["styler.html"]
-}
