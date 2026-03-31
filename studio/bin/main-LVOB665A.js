@@ -65,7 +65,7 @@ ${t.map((i,r)=>`${r+1}) ${i.toString()}`).join(`
             ${n.ui.components.button("A\xF1adir al Mapa","add","primary","btn-add-layers")}
           </div>
         </div>
-      `;n.ui.addPanel({id:e,title:"Cat\xE1logo de Capas",content:s,onRender:a=>{a.querySelector("#btn-add-layers")?.addEventListener("click",()=>{a.querySelectorAll('input[type="checkbox"]:checked').forEach(u=>{let d=u.getAttribute("data-type"),h=u.getAttribute("data-id"),f=t[d].find(p=>p.id===h);f&&n.layers.addWMSLayer(f.name,f.url,{LAYERS:f.layers,TILED:!0})}),n.ui.removePanel(e)})}})};n.commands.register("layer-catalog:toggle",i),n.ui.addButton({id:"open-catalog",label:"Abrir Cat\xE1logo de Capas",icon:"grid_view",commandId:"layer-catalog:toggle"})},deactivate:()=>{}};var eI={id:"layer-manager-plugin",name:"Gestor de Capas",activate:n=>{let e="layer-manager-panel";n.ui.addStyles(`
+      `;n.ui.addModal({id:e,title:"Cat\xE1logo de Capas",content:s,onRender:a=>{a.querySelector("#btn-add-layers")?.addEventListener("click",()=>{a.querySelectorAll('input[type="checkbox"]:checked').forEach(u=>{let d=u.getAttribute("data-type"),h=u.getAttribute("data-id"),f=t[d].find(p=>p.id===h);f&&n.layers.addWMSLayer(f.name,f.url,{LAYERS:f.layers,TILED:!0})}),n.ui.removePanel(e)})}})};n.commands.register("layer-catalog:toggle",i),n.ui.addButton({id:"open-catalog",label:"Abrir Cat\xE1logo de Capas",icon:"grid_view",commandId:"layer-catalog:toggle"})},deactivate:()=>{}};var eI={id:"layer-manager-plugin",name:"Gestor de Capas",activate:n=>{let e="layer-manager-panel";n.ui.addStyles(`
       .layer-item-container {
         display: grid;
         grid-template-columns: 1fr auto;
