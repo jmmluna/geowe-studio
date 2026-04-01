@@ -71,9 +71,54 @@
   letter-spacing: 1px;
 }
 
+.section-title.selectable {
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.section-title.selectable:hover {
+  background: rgba(52, 152, 219, 0.05);
+}
+
+.expansion-icon {
+  font-size: 18px;
+  color: #7f8c8d;
+  transition: transform 0.2s;
+}
+
+.close-panel-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #7f8c8d;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.close-panel-btn:hover {
+  color: var(--primary-color);
+}
+
+.dedicated-section {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 150px);
+}
+
+.dedicated-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 10px;
+}
+
 .plugin-section {
-  padding: 24px 20px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-title {

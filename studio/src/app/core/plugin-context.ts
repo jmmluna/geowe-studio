@@ -10,6 +10,10 @@ export interface PluginContext {
   resources: {
     getTemplate: (name: string) => string | undefined;
   };
+  app: {
+    title: string;
+    logo: string;
+  };
 }
 
 
@@ -56,6 +60,8 @@ export interface UIAPI {
 
   setButtonActive: (id: string, active: boolean) => void;
   addStyles: (css: string) => void;
+  addSidebarSection: (options: { id: string, title: string, icon: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
+  registerSidebar: (options: { id: string, title: string, icon: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
   components: UIComponents;
 
 }
@@ -64,8 +70,8 @@ export interface UIAPI {
 
 
 export interface CommandBus {
-  register: (id: string, action: () => void) => void;
-  execute: (id: string) => void;
+  register: (id: string, action: (payload?: any) => void) => void;
+  execute: (id: string, payload?: any) => void;
 }
 
 export interface EventBusAPI {

@@ -12,6 +12,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import OSM from 'ol/source/OSM';
 import { fromLonLat } from 'ol/proj';
 import { Style, Fill, Stroke } from 'ol/style';
+import { ScaleLine } from 'ol/control';
 import { PluginManagerService } from './core/plugin-manager.service';
 
 import { EventBusService, GeoEvent } from './core/event-bus.service';
@@ -35,6 +36,9 @@ export class App implements OnInit {
 
   public uiButtons: any[] = [];
   public uiPanels: any[] = [];
+  public sidebarSections: any[] = [];
+  public sidebarPanels: any[] = [];
+  public activeSidebarId = 'default';
   public statusMessage: string = '';
   public isSidebarVisible = true;
 
@@ -60,10 +64,32 @@ export class App implements OnInit {
     (window as any).ol = {
       style: { Style, Fill, Stroke }
     };
-    this.pluginManager.initContext(this.map);
+    this.pluginManager.initContext(this.map, { title: this.appTitle, logo: this.appLogo });
+
+    // Registro de comandos Core de UI para plugins
+    const ctx = this.pluginManager.pluginContext;
+    ctx.commands.register('ui:openSidebar', () => {
+      this.isSidebarVisible = true;
+      this.cdr.detectChanges();
+    });
+    ctx.commands.register('ui:activePluginSidebar', (id: string) => this.activePluginSidebar(id));
+    ctx.commands.register('ui:resetSidebar', () => this.resetSidebar());
 
     this.eventBus.on('ui:statusChanged', (message: string) => {
       this.statusMessage = message;
+      this.cdr.detectChanges();
+    });
+
+    this.eventBus.on('ui:sidebarSectionsChanged', () => {
+      this.sidebarSections = this.pluginManager.getSidebarSections();
+      this.cdr.detectChanges();
+    });
+
+    this.eventBus.on('ui:sidebarPanelsChanged', () => {
+      this.sidebarPanels = this.pluginManager.getSidebarPanels().map(p => ({
+        ...p,
+        safeContent: this.sanitizer.bypassSecurityTrustHtml(p.content)
+      }));
       this.cdr.detectChanges();
     });
 
@@ -203,7 +229,10 @@ export class App implements OnInit {
       view: new View({
         center: fromLonLat([-3.703790, 40.416775]), // Madrid
         zoom: 6
-      })
+      }),
+      controls: [
+        new ScaleLine()
+      ]
     });
   }
 
@@ -233,9 +262,41 @@ export class App implements OnInit {
     setTimeout(() => {
       if (this.map) this.map.updateSize();
     }, 100);
+    this.cdr.detectChanges();
+    this.pluginManager.updateAppInfo({ title: this.appTitle, logo: this.appLogo });
   }
 
+  public toggleSidebarSection(id: string) {
+    const section = this.sidebarSections.find(s => s.id === id);
+    if (section) {
+      section.isOpen = !section.isOpen;
+      
+      if (section.isOpen && section.onRender) {
+        setTimeout(() => {
+          const el = document.getElementById(`sidebar-body-${section.id}`);
+          if (el) section.onRender(el);
+        }, 50);
+      }
+    }
+  }
 
+  public activePluginSidebar(id: string) {
+    this.activeSidebarId = id;
+    const panel = this.sidebarPanels.find(p => p.id === id);
+    
+    if (panel && panel.onRender) {
+      setTimeout(() => {
+        const el = document.getElementById(`sidebar-dedicated-body-${panel.id}`);
+        if (el) panel.onRender(el);
+      }, 50);
+    }
+    this.cdr.detectChanges();
+  }
+
+  public resetSidebar() {
+    this.activeSidebarId = 'default';
+    this.cdr.detectChanges();
+  }
 
   public async loadRemote(urlInput: string) {
     if (!urlInput) return;

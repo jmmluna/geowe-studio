@@ -13,6 +13,8 @@ export class PluginManagerService {
   private activePlugins = new Map<string, GeoWEPlugin>();
   private uiButtons: any[] = [];
   private uiPanels: any[] = [];
+  private sidebarSections: any[] = [];
+  private sidebarPanels: any[] = [];
   private layerActions: any[] = [];
   private pluginResources = new Map<string, Map<string, string>>();
   public pluginContext!: PluginContext;
@@ -39,11 +41,11 @@ export class PluginManagerService {
 
   constructor(private eventBus: EventBusService) { }
 
-  public initContext(mapInstance: any) {
+  public initContext(mapInstance: any, appInfo: { title: string, logo: string } = { title: 'GeoWE Studio', logo: 'logo-geowe.png' }) {
     this.olMap = mapInstance;
 
     // Commands and UI state for this MVP
-    const commands = new Map<string, () => void>();
+    const commands = new Map<string, (payload?: any) => void>();
 
     this.pluginContext = {
       map: this.olMap,
@@ -181,6 +183,17 @@ export class PluginManagerService {
           style.innerHTML = css;
           document.head.appendChild(style);
         },
+        addSidebarSection: (options: any) => {
+          this.sidebarSections.push({
+            ...options,
+            isOpen: false
+          });
+          this.eventBus.emit({ type: 'ui:sidebarSectionsChanged' });
+        },
+        registerSidebar: (options: any) => {
+          this.sidebarPanels.push(options);
+          this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
+        },
         components: {
 
           button: (label, icon, type = 'primary', id) => `
@@ -235,9 +248,9 @@ export class PluginManagerService {
 
 
       commands: {
-        register: (id, action) => commands.set(id, action),
-        execute: (id) => {
-          if (commands.has(id)) commands.get(id)!();
+        register: (id: string, action: (payload?: any) => void) => commands.set(id, action),
+        execute: (id: string, payload?: any) => {
+          if (commands.has(id)) commands.get(id)!(payload);
         }
       },
       events: {
@@ -253,15 +266,13 @@ export class PluginManagerService {
       },
       resources: {
         getTemplate: (name: string) => {
-          // Intentamos determinar qué plugin está pidiendo el recurso
-          // En este SDK simple, podemos buscar en todos o asociarlo al activador
-          // Buscamos en todos los mapas de recursos por sencillez en este MVP
           for (let resourceMap of this.pluginResources.values()) {
             if (resourceMap.has(name)) return resourceMap.get(name);
           }
           return undefined;
         }
-      }
+      },
+      app: appInfo
     };
   }
 
@@ -278,6 +289,20 @@ export class PluginManagerService {
     this.eventBus.emit({ type: 'ui:changed' });
     this.eventBus.emit({ type: 'ui:panelsChanged' });
     console.log("[PluginManager] Entorno reiniciado");
+  }
+
+  public getSidebarSections() {
+    return this.sidebarSections;
+  }
+
+  public getSidebarPanels() {
+    return this.sidebarPanels;
+  }
+
+  public updateAppInfo(appInfo: { title: string, logo: string }) {
+    if (this.pluginContext) {
+      this.pluginContext.app = appInfo;
+    }
   }
 
   public getUIButtons() {

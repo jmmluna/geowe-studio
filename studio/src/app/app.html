@@ -32,31 +32,56 @@
       <p>{{appSlogan}}</p>
     </div>
 
-    <!-- Gestión de Plugins -->
-    <div class="plugin-section" *ngIf="showPluginManagement">
-      <div class="section-title">
-        <span class="material-icons">settings_input_component</span>
-        <h3>Gestión de Plugins</h3>
-      </div>
-
-
-      <div class="control-group">
-        <label>Cargar Archivo Local:</label>
-        <div class="file-input-wrapper">
-          <button class="btn-secondary">Instalar App/Extensión/Plugin (.gapp, .gext, .gplugin, .js)</button>
-          <input type="file" accept=".js,.zip,.gplugin,.gext,.gapp" (change)="onFileSelected($event)" />
+    <!-- VISTA DEFAULT (Gestión + Secciones) -->
+    <div *ngIf="activeSidebarId === 'default'">
+      <!-- Gestión de Plugins -->
+      <div class="plugin-section" *ngIf="showPluginManagement">
+        <div class="section-title">
+          <span class="material-icons">settings_input_component</span>
+          <h3>Gestión de Plugins</h3>
         </div>
 
+        <div class="control-group">
+          <label>Cargar Archivo Local:</label>
+          <div class="file-input-wrapper">
+            <button class="btn-secondary">Instalar App/Extensión/Plugin (.gapp, .gext, .gplugin, .js)</button>
+            <input type="file" accept=".js,.zip,.gplugin,.gext,.gapp" (change)="onFileSelected($event)" />
+          </div>
+        </div>
 
+        <div class="control-group">
+          <label>URL de módulo Remoto:</label>
+          <div class="input-row">
+            <input #remoteUrl type="text" placeholder="https://cdn.com/plugin.js" />
+            <button class="btn-primary" (click)="loadRemote(remoteUrl.value)">
+              <span class="material-icons">download</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="control-group">
-        <label>URL de módulo Remoto:</label>
-        <div class="input-row">
-          <input #remoteUrl type="text" placeholder="https://cdn.com/plugin.js" />
-          <button class="btn-primary" (click)="loadRemote(remoteUrl.value)">
-            <span class="material-icons">download</span>
-          </button>
+      <!-- Secciones Dinámicas de Plugins (SDK v2) -->
+      <div class="plugin-section" *ngFor="let section of sidebarSections" [id]="'section-' + section.id">
+        <div class="section-title selectable" (click)="toggleSidebarSection(section.id)">
+          <span class="material-icons expansion-icon">{{ section.isOpen ? 'expand_more' : 'chevron_right' }}</span>
+          <span class="material-icons">{{ section.icon || 'extension' }}</span>
+          <h3>{{ section.title }}</h3>
+        </div>
+        <div class="section-content" *ngIf="section.isOpen" [innerHTML]="section.safeContent" [id]="'sidebar-body-' + section.id">
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA DEDICADA DE PLUGIN -->
+    <div *ngFor="let panel of sidebarPanels">
+      <div class="plugin-section dedicated-section" *ngIf="activeSidebarId === panel.id">
+        <div class="section-title">
+          <span class="material-icons">{{ panel.icon || 'extension' }}</span>
+          <h3>{{ panel.title }}</h3>
+          <span style="flex: 1"></span>
+          <button class="close-panel-btn" (click)="resetSidebar()">×</button>
+        </div>
+        <div class="section-content dedicated-content" [innerHTML]="panel.safeContent" [id]="'sidebar-dedicated-body-' + panel.id">
         </div>
       </div>
     </div>
