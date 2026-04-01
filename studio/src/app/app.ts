@@ -105,7 +105,7 @@ export class App implements OnInit {
           url: payload.url,
           params: payload.params,
         }),
-        properties: { 
+        properties: {
           name: payload.name,
           type: 'raster'
         }
@@ -123,7 +123,7 @@ export class App implements OnInit {
 
       const vectorLayer = new VectorLayer({
         source: vectorSource,
-        properties: { 
+        properties: {
           name: payload.name,
           type: 'vector',
           color: '#3498db'
@@ -296,7 +296,7 @@ export class App implements OnInit {
       title: `Información de la App: ${this.appTitle}`,
       content: `
         <div style="padding:15px; text-align:center">
-          <img src="${this.appLogo}" style="height:60px; margin-bottom:15px">
+          <img src="${this.appLogo}" style="height:160px; margin-bottom:15px">
           <h3>${this.appTitle}</h3>
           <p style="color:#666; font-style:italic">${this.appSlogan}</p>
           <hr style="margin:15px 0; border:0; border-top:1px solid #eee">
