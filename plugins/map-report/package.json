@@ -1,0 +1,20 @@
+{
+  "name": "geowe-map-report-plugin",
+  "version": "1.0.0",
+  "description": "GeoWE React Plugin to generate PDF reports of the map",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "esbuild": "^0.20.1",
+    "typescript": "^5.4.2"
+  }
+}

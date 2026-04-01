@@ -1,0 +1,7 @@
+{
+  "id": "map-report",
+  "name": "Map PDF Report (React)",
+  "version": "1.0.0",
+  "description": "Generación de informes PDF profesionales con mapa, leyenda y escala.",
+  "main": "index.js"
+}
