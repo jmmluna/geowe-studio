@@ -60,8 +60,8 @@ export class PluginManagerService {
         getAll: () => {
           return this.olMap.getLayers().getArray().map((layer: any) => {
             const name = layer.get('name') || 'Capa sin nombre';
-            // Determinar tipo (simple para MVP)
-            const type = layer.constructor.name.includes('Vector') ? 'vector' : 'raster';
+            // Determinar tipo usando metadatos inyectados para evitar problemas de minificación
+            const type = layer.get('type') || (layer.constructor.name.includes('Vector') ? 'vector' : 'raster');
 
             // Intentar obtener un color representativo para vectores
             let color = undefined;
@@ -93,7 +93,7 @@ export class PluginManagerService {
         },
         setStyle: (name: string, styleOptions: any) => {
           const layer = this.olMap.getLayers().getArray().find((l: any) => l.get('name') === name);
-          if (layer && layer.constructor.name.includes('Vector')) {
+          if (layer && (layer.get('type') === 'vector' || layer.constructor.name.includes('Vector'))) {
             // Importación dinámica simulada o uso de las clases de OL si están disponibles
             // En este entorno, asumimos que podemos acceder a los constructores de estilo o usar setStyle directo
             const ol = (window as any).ol; // Asumiendo que OL está en window o disponible

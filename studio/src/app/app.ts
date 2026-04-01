@@ -105,7 +105,10 @@ export class App implements OnInit {
           url: payload.url,
           params: payload.params,
         }),
-        properties: { name: payload.name }
+        properties: { 
+          name: payload.name,
+          type: 'raster'
+        }
       });
       this.map.addLayer(wmsLayer);
       this.eventBus.emit({ type: 'layer:changed' });
@@ -120,7 +123,11 @@ export class App implements OnInit {
 
       const vectorLayer = new VectorLayer({
         source: vectorSource,
-        properties: { name: payload.name },
+        properties: { 
+          name: payload.name,
+          type: 'vector',
+          color: '#3498db'
+        },
         style: new Style({
           fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),
           stroke: new Stroke({ color: '#3498db', width: 2 }),
