@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --base-href /geowe-studio/studio/bin/",
+    "build:prod": "ng build --base-href /geowe-studio/studio/bin/ && node tools/deploy-bin.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "forge:pack": "node tools/forge-packager.js"
