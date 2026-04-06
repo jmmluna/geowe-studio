@@ -32,14 +32,14 @@ const App = ({ context }: { context: any }) => {
     }}>
       <h3 style={{ margin: 0, color: '#2c3e50', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span className="material-icons">picture_as_pdf</span>
-        Configurar Reporte
+        Configurar Informe
       </h3>
-      
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#666' }}>Título del Informe</label>
-        <input 
-          type="text" 
-          value={title} 
+        <input
+          type="text"
+          value={title}
           onChange={(e) => setTitle(e.target.value)}
           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
         />
@@ -47,8 +47,8 @@ const App = ({ context }: { context: any }) => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#666' }}>Descripción</label>
-        <textarea 
-          value={description} 
+        <textarea
+          value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
           style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', resize: 'vertical' }}
@@ -57,7 +57,7 @@ const App = ({ context }: { context: any }) => {
 
       <div style={{ flex: 1 }}></div>
 
-      <button 
+      <button
         onClick={handleExport}
         disabled={loading}
         style={{

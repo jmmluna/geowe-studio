@@ -65,18 +65,36 @@ export async function generatePDF(context: any, options: { title: string, descri
     
     doc.addImage(mapImgData, 'JPEG', margin, 60, imgWidth, imgHeight);
 
-    // 4. Barra de Escala (Captura robusta desde el visor)
-    const scaleElement = document.querySelector('.ol-scale-line-inner') || 
-                         document.querySelector('.ol-scale-line') ||
-                         document.querySelector('.ol-scale-text');
-                         
+    // 4. Barra de Escala Gráfica Profesional (Estilo Checkerboard)
+    const scaleElement = document.querySelector('.ol-scale-line-inner') as HTMLElement;
     if (scaleElement) {
-        const scaleText = (scaleElement as HTMLElement).innerText || (scaleElement as HTMLElement).textContent;
-        if (scaleText) {
-          doc.setFontSize(10);
-          doc.setTextColor(52, 73, 94);
-          doc.text(`Escala: ${scaleText.trim()}`, margin, 60 + imgHeight + 8);
-        }
+        const scaleText = scaleElement.innerText;
+        const scaleWidthPx = scaleElement.offsetWidth;
+        
+        // Calcular ancho proporcional en mm (imgWidth / map.getSize()[0])
+        const mmPerPx = imgWidth / size[0];
+        const scaleWidthMm = scaleWidthPx * mmPerPx;
+        
+        const scaleX = margin;
+        const scaleY = 60 + imgHeight + 8;
+        const barHeight = 2.5;
+
+        // Dibujar barra de escala profesional (segmentos alternados)
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(0, 0, 0);
+        
+        // Mitad izquierda (Negro)
+        doc.setFillColor(0, 0, 0);
+        doc.rect(scaleX, scaleY, scaleWidthMm / 2, barHeight, 'FD');
+        
+        // Mitad derecha (Blanco)
+        doc.setFillColor(255, 255, 255);
+        doc.rect(scaleX + (scaleWidthMm / 2), scaleY, scaleWidthMm / 2, barHeight, 'FD');
+        
+        // Texto de escala centralizado o a la derecha
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        doc.text(scaleText, scaleX + scaleWidthMm + 3, scaleY + barHeight - 0.5);
     }
 
     // 5. Leyenda de Capas Visibles

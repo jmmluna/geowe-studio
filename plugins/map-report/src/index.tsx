@@ -3,7 +3,7 @@ import App from './App.tsx';
 
 export default {
   id: 'map-report',
-  name: 'Map Report (React)',
+  name: 'Map Report',
   version: '1.0.0',
 
   activate: (ctx: any) => {
@@ -14,7 +14,7 @@ export default {
     // Registramos el Sidebar Dedicado (SDK v2.1)
     ctx.ui.registerSidebar({
       id: SIDEBAR_ID,
-      title: 'Reporte de Mapa',
+      title: 'Informe de Mapa',
       icon: 'picture_as_pdf',
       content: `<div id="${ROOT_ID}" style="height: 100%"></div>`,
       onRender: (el: HTMLElement) => {
@@ -29,10 +29,10 @@ export default {
     // Acción de la toolbar para conmutar el sidebar dedicado
     const toggleReportSidebar = () => {
       isSidebarActive = !isSidebarActive;
-      
+
       if (isSidebarActive) {
         // Asegurar que el sidebar global está visible
-        ctx.commands.execute('ui:openSidebar'); 
+        ctx.commands.execute('ui:openSidebar');
         // Activar nuestro sidebar dedicado
         ctx.commands.execute('ui:activePluginSidebar', SIDEBAR_ID);
         ctx.ui.setButtonActive('btn-map-report', true);
@@ -42,6 +42,15 @@ export default {
         ctx.ui.setButtonActive('btn-map-report', false);
       }
     };
+
+    // Sincronización de estado con la App (Fase 25)
+    ctx.events.on('ui:sidebarChanged', (payload: any) => {
+      const isCurrentlyActive = payload.activeId === SIDEBAR_ID;
+      if (isSidebarActive !== isCurrentlyActive) {
+        isSidebarActive = isCurrentlyActive;
+        ctx.ui.setButtonActive('btn-map-report', isSidebarActive);
+      }
+    });
 
     ctx.ui.addButton({
       id: 'btn-map-report',
