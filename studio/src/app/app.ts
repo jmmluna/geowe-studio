@@ -43,7 +43,7 @@ export class App implements OnInit {
   public isSidebarVisible = true;
 
   // Propiedades de la Aplicación (.gapp)
-  public appTitle = 'Cargando...';
+  public appTitle = 'GeoWE Studio';
   public appSlogan = '';
   public appLogo = 'logo-geowe.png';
   public showPluginManagement = true;
@@ -258,6 +258,7 @@ export class App implements OnInit {
 
   public toggleSidebar() {
     this.isSidebarVisible = !this.isSidebarVisible;
+    this.eventBus.emit({ type: 'ui:sidebarChanged', payload: { activeId: this.activeSidebarId, isVisible: this.isSidebarVisible } });
     // Forzar actualización del mapa tras el cambio de layout
     setTimeout(() => {
       if (this.map) this.map.updateSize();
@@ -290,11 +291,13 @@ export class App implements OnInit {
         if (el) panel.onRender(el);
       }, 50);
     }
+    this.eventBus.emit({ type: 'ui:sidebarChanged', payload: { activeId: id, isVisible: this.isSidebarVisible } });
     this.cdr.detectChanges();
   }
 
   public resetSidebar() {
     this.activeSidebarId = 'default';
+    this.eventBus.emit({ type: 'ui:sidebarChanged', payload: { activeId: 'default', isVisible: this.isSidebarVisible } });
     this.cdr.detectChanges();
   }
 
