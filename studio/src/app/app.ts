@@ -307,14 +307,18 @@ export class App implements OnInit {
   }
 
   public onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const fileName = file.name.toLowerCase();
-      if (fileName.endsWith('.js') || fileName.endsWith('.zip') || fileName.endsWith('.gplugin') || fileName.endsWith('.gext') || fileName.endsWith('.gapp')) {
-        this.pluginManager.loadLocalPlugin(file);
-      } else {
-        alert('Por favor, selecciona un archivo .js, .zip, .gplugin, .gext o .gapp');
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith('.js') || fileName.endsWith('.zip') || fileName.endsWith('.gplugin') || fileName.endsWith('.gext') || fileName.endsWith('.gapp')) {
+          this.pluginManager.loadLocalPlugin(file);
+        }
       }
+      this.statusMessage = `${files.length} archivos procesados`;
+      this.cdr.detectChanges();
+      event.target.value = '';
     }
   }
 
