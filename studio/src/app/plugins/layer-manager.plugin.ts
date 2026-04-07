@@ -244,8 +244,6 @@ export default {
     ctx.events.on('layer:addWMS', () => setTimeout(() => refresh(), 500));
     ctx.events.on('layer:addVector', () => setTimeout(() => refresh(), 500));
     
-    // Refrescar al registrar nuevas acciones externas (Fase 20)
-    ctx.events.on('ui:panelsChanged', () => refresh());
 
     // Registrar comando como toggle
     ctx.commands.register('layer-manager:toggle', toggleManager);
