@@ -1,6 +1,6 @@
 # GeoWE React Plugin: Map PDF Reporter
 
-Este plugin proporcional una herramienta profesional para la generación de informes en PDF que capturan el estado actual del mapa, incluyendo metadatos, leyenda dinámica y escala.
+Este plugin proporciona una herramienta para la generación de informes en PDF que captura el estado actual del mapa, incluyendo metadatos, leyenda dinámica y escala.
 
 Sirve como **estándar de arquitectura para plugins basados en React** dentro del ecosistema GeoWE Forge.
 
