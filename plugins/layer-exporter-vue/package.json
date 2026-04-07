@@ -1,0 +1,25 @@
+{
+  "name": "geowe-layer-exporter-vue",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build-lib": "vite build",
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "ol": "^7.4.0",
+    "@mapbox/shp-write": "^0.4.3",
+    "proj4": "^2.9.0",
+    "@ngageoint/geopackage": "^4.2.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "@types/proj4": "^2.5.2",
+    "@types/node": "^18.16.19",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9",
+    "vue-tsc": "^1.4.2"
+  }
+}

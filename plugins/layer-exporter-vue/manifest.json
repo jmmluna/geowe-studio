@@ -1,0 +1,9 @@
+{
+  "id": "layer-exporter-vue",
+  "name": "Exportador de Capas Vectoriales (Vue)",
+  "version": "1.0.0",
+  "main": "index.mjs",
+  "styles": ["style.css"],
+  "icon": "file_download",
+  "description": "Exporta capas vectoriales a formatos estándar como GeoJSON, SHP, GPKG, WKT y KML con reproyección."
+}

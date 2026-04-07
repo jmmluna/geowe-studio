@@ -1,0 +1,4 @@
+node_modules
+dist
+*.gplugin
+.DS_Store
