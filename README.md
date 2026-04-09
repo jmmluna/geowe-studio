@@ -2,10 +2,14 @@
 ### SIG Extensible para la Web Moderna
 
 <p align="center">
-  <img src="studio/public/logo-geowe.png" width="200" alt="GeoWE Studio Logo">
+  <img src="studio/public/logo-geowe.png" width="180" alt="GeoWE Studio Logo">
 </p>
 
-**GeoWE Studio** es una plataforma de Información Geográfica (SIG) de código abierto diseñada para la interoperabilidad, la extensibilidad y el alto rendimiento. Basada en estándares OGC, permite gestionar capas vectoriales y ráster mediante una arquitectura de micro-plugins agnóstica al framework.
+**GeoWE Studio** no es solo un SIG; es un **Runtime + SDK** de código abierto diseñado específicamente para construir aplicaciones SIG en la web. Su objetivo es proporcionar una infraestructura extensible basada en estándares OGC que permite crear herramientas geoespaciales a medida mediante una arquitectura de micro-plugins agnóstica al framework.
+
+<p align="center">
+  <img src="screenshot/geowe-studio-app.png" width="800" alt="GeoWE Studio Screenshot">
+</p>
 
 ---
 
