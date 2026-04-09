@@ -4,46 +4,35 @@ Bienvenido a la guía paso a paso para crear tu primera extensión en GeoWE Stud
 
 ---
 
-## Paso 1: Preparar el Entorno
-Asegúrate de tener instalado **Node.js** (v18+ recomendado).
+## Paso 1: Inicialización ultra-rápida
+No necesitas clonar el repositorio principal. Puedes inicializar un entorno de desarrollo completo con un solo comando:
 
-1.  **Clona el repositorio**:
+1.  **Crea y entra en tu carpeta**:
     ```bash
-    git clone https://github.com/jmmluna/geowe-studio.git
-    cd geowe-studio
+    mkdir mi-plugin-geowe && cd mi-plugin-geowe
     ```
-2.  **Instala y arranca**:
+2.  **Lanza el Bootstrap**:
+    Este comando descarga la herramienta **GeoWE Forge** e inicializa los archivos necesarios (incluyendo los tipos para auto-completado):
     ```bash
-    npm install
-    npm run dev
+    curl -s https://raw.githubusercontent.com/jmmluna/geowe-studio/main/packages/geowe-forge/index.js | node -- - init .
     ```
-    Abre `http://localhost:4200` en tu navegador. ¡Ya tienes el Studio funcionando!
+
+> [!TIP]
+> **IntelliSense Inmediato:** Al ejecutar el comando anterior, se creará un archivo `geowe-studio.d.ts`. Tu editor (VSCode) lo detectará automáticamente y tendrás ayuda contextual mientras programas.
 
 ---
+    
+## Paso 2: Tu Código (index.js)
+Al ejecutar el comando anterior, **GeoWE Forge** ha creado automáticamente los archivos necesarios por ti. No necesitas crear nada manualmente.
 
-## Paso 2: Crear tu Primer Plugin
-Crea una carpeta llamada `plugins/mi-herramienta` y añade dos archivos:
+Abre el archivo `index.js` en tu editor favorito. Verás algo parecido a esto:
 
-### 1. `manifest.json`
-Define la identidad de tu plugin.
-```json
-{
-  "id": "mi-hola-mundo",
-  "name": "Mi Primer Plugin",
-  "version": "1.0.0",
-  "main": "index.js",
-  "icon": "mood"
-}
-```
-
-### 2. `index.js` (VanillaJS)
-Añade la lógica básica para interactuar con GeoWE.
 ```javascript
 export default {
   id: 'mi-hola-mundo',
   
   activate: (context) => {
-    // Registramos la acción
+    // Registramos una acción (comando)
     context.commands.register('say.hello', () => {
       context.ui.setStatus('¡GeoWE dice Hola Mundo!');
     });
@@ -58,6 +47,7 @@ export default {
   }
 };
 ```
+Este código utiliza la API **`PluginContext`**. Gracias al archivo `geowe-studio.d.ts` que se generó en el Paso 1, verás que al escribir `context.` tu editor te sugerirá todos los métodos disponibles.
 
 ---
 
@@ -70,12 +60,12 @@ export default {
 ---
 
 ## Paso 4: Empaquetar para Distribuir
-Cuando tu herramienta esté lista, empaquétala para compartirla:
+Cuando tu herramienta esté lista, empaquétala para compartirla usando nuestra herramienta de empaquetado autónoma (generada en el Paso 1):
 
 ```bash
-npm run forge:pack plugins/mi-herramienta
+node forge.js .
 ```
-Esto generará un archivo `mi-hola-mundo_v1.0.0.gplugin`. Este archivo es el que se puede subir a un servidor o compartir con otros usuarios de GeoWE.
+Esto analizará tu carpeta actual, detectará el `manifest.json` y generará un archivo `mi-hola-mundo_v1.0.0.gplugin`. ¡Este archivo es todo lo que necesitas para distribuir tu plugin!
 
 ---
 

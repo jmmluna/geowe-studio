@@ -1,0 +1,14 @@
+{
+  "name": "@geowe/forge",
+  "version": "1.0.0",
+  "description": "CLI tool for packaging GeoWE Studio plugins, extensions, and apps",
+  "main": "index.js",
+  "bin": {
+    "geowe-forge": "index.js"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  },
+  "author": "GeoWE",
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@geowe/studio-sdk",
+  "version": "1.0.0",
+  "description": "SDK for developing GeoWE Studio plugins",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "GeoWE",
+  "license": "Apache-2.0",
+  "keywords": [
+    "geospatial",
+    "gis",
+    "sdk",
+    "geowe",
+    "plugin"
+  ]
+}
