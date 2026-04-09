@@ -15,6 +15,24 @@ if (args.includes('--version') || args.includes('-v')) {
     process.exit(0);
 }
 
+function printSuccess(targetPath) {
+    console.log(`
+    ✨ Proyecto inicializado con éxito en: ${targetPath}
+    
+    Archivos creados:
+    - package.json (Dependencias)
+    - manifest.json (Configuración)
+    - index.js (Lógica principal)
+    - geowe-studio.d.ts (Interfaces para IntelliSense)
+    - forge.js (Herramienta de empaquetado autónoma)
+    
+    ¡Listo para empezar! 
+    1. Ejecuta 'npm install' para instalar las herramientas de empaquetado.
+    2. Prueba a arrastrar index.js a GeoWE Studio para verlo en acción.
+    `);
+    process.exit(0);
+}
+
 // Comando INIT
 if (args[0] === 'init') {
     const targetDir = args[1] || '.';
