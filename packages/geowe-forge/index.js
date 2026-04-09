@@ -2,15 +2,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const JSZip = require('jszip');
 
 /**
- * GeoWE Forge CLI
- * Herramienta de empaquetado profesional para el ecosistema GeoWE.
- * Soporta .gplugin, .gext y .gapp.
+ * GeoWE Forge CLI v1.0.1
  */
 
-const version = "1.0.0";
+const version = "1.0.1";
 const args = process.argv.slice(2);
 
 if (args.includes('--version') || args.includes('-v')) {
@@ -36,6 +33,15 @@ if (args[0] === 'init') {
         main: "index.js",
         icon: "extension",
         description: "Mi nueva herramienta para GeoWE Studio"
+    };
+
+    const pkgJson = {
+        name: pluginId,
+        version: "1.0.0",
+        private: true,
+        dependencies: {
+            "jszip": "^3.10.1"
+        }
     };
 
     const indexJs = `export default {
@@ -84,6 +90,7 @@ export interface GeoWEPlugin {
 }`;
 
     fs.writeFileSync(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(path.join(targetPath, 'package.json'), JSON.stringify(pkgJson, null, 2));
     fs.writeFileSync(path.join(targetPath, 'index.js'), indexJs);
     fs.writeFileSync(path.join(targetPath, 'geowe-studio.d.ts'), sdkTypes);
     
@@ -95,12 +102,15 @@ export interface GeoWEPlugin {
     ✨ Proyecto inicializado con éxito en: ${targetPath}
     
     Archivos creados:
+    - package.json (Dependencias)
     - manifest.json (Configuración)
     - index.js (Lógica principal)
     - geowe-studio.d.ts (Interfaces para IntelliSense)
     - forge.js (Herramienta de empaquetado autónoma)
     
-    ¡Listo para empezar! Prueba a arrastrar index.js a GeoWE Studio.
+    ¡Listo para empezar! 
+    1. Ejecuta 'npm install' para instalar las herramientas de empaquetado.
+    2. Prueba a arrastrar index.js a GeoWE Studio para verlo en acción.
     `);
     process.exit(0);
 }
@@ -114,12 +124,21 @@ if (!pluginPath || args.includes('--help') || args.includes('-h')) {
     Uso: 
     geowe-forge init <ruta>      Inicializa un nuevo proyecto de plugin
     geowe-forge <ruta>           Empaqueta un proyecto existente (.gplugin, .gext, .gapp)
-    
-    Descripción:
-    GeoWE Forge es la herramienta oficial para el desarrollo y empaquetado 
-    del ecosistema GeoWE.
     `);
     process.exit(0);
+}
+
+// Carga tardía de JSZip para evitar errores en el comando 'init' sin node_modules
+let JSZip;
+try {
+    JSZip = require('jszip');
+} catch (e) {
+    console.error(`
+    ❌ Error: No se encontró el módulo 'jszip'.
+    Para empaquetar plugins es necesario instalar las dependencias.
+    Por favor, ejecuta: npm install jszip
+    `);
+    process.exit(1);
 }
 
 const absolutePath = path.resolve(pluginPath);
