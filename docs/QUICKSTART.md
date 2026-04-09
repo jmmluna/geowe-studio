@@ -60,10 +60,10 @@ Este código utiliza la API **`PluginContext`**. Gracias al archivo `geowe-studi
 ---
 
 ## Paso 4: Empaquetar para Distribuir
-Cuando tu herramienta esté lista, empaquétala para compartirla usando nuestra herramienta de empaquetado autónoma (generada en el Paso 1):
+Cuando tu herramienta esté lista, empaquétala para compartirla usando el comando que hemos dejado preparado por ti:
 
 ```bash
-node forge.js .
+npm run pack
 ```
 Esto analizará tu carpeta actual, detectará el `manifest.json` y generará un archivo `mi-hola-mundo_v1.0.0.gplugin`. ¡Este archivo es todo lo que necesitas para distribuir tu plugin!
 

@@ -39,6 +39,9 @@ if (args[0] === 'init') {
         name: pluginId,
         version: "1.0.0",
         private: true,
+        scripts: {
+            "pack": "node forge.js ."
+        },
         dependencies: {
             "jszip": "^3.10.1"
         }
@@ -123,120 +126,103 @@ export interface GeoWEPlugin {
             printSuccess(targetPath);
         }
     }
-}
+} else {
+    // --- LÓGICA DE EMPAQUETADO ---
+    const pluginPath = args[0];
 
-function printSuccess(targetPath) {
-    console.log(`
-    ✨ Proyecto inicializado con éxito en: ${targetPath}
-    
-    Archivos creados:
-    - package.json (Dependencias)
-    - manifest.json (Configuración)
-    - index.js (Lógica principal)
-    - geowe-studio.d.ts (Interfaces para IntelliSense)
-    - forge.js (Herramienta de empaquetado autónoma)
-    
-    ¡Listo para empezar! 
-    1. Ejecuta 'npm install' para instalar las herramientas de empaquetado.
-    2. Prueba a arrastrar index.js a GeoWE Studio para verlo en acción.
-    `);
-    process.exit(0);
-}
-
-const pluginPath = args[0];
-
-if (!pluginPath || args.includes('--help') || args.includes('-h')) {
-    console.log(`
+    if (!pluginPath || args.includes('--help') || args.includes('-h')) {
+        console.log(`
     📦 GeoWE Forge CLI v${version}
     
     Uso: 
     geowe-forge init <ruta>      Inicializa un nuevo proyecto de plugin
     geowe-forge <ruta>           Empaqueta un proyecto existente (.gplugin, .gext, .gapp)
     `);
-    process.exit(0);
-}
+        process.exit(0);
+    }
 
-// Carga tardía de JSZip para evitar errores en el comando 'init' sin node_modules
-let JSZip;
-try {
-    JSZip = require('jszip');
-} catch (e) {
-    console.error(`
+    // Carga tardía de JSZip para evitar errores en el comando 'init' sin node_modules
+    let JSZip;
+    try {
+        JSZip = require('jszip');
+    } catch (e) {
+        console.error(`
     ❌ Para usar las funciones de empaquetado es necesario instalar las dependencias.
     Por favor, ejecuta: npm install
     `);
-    process.exit(1);
-}
-
-const absolutePath = path.resolve(pluginPath);
-
-if (!fs.existsSync(absolutePath)) {
-    console.error(`❌ Error: La ruta '${pluginPath}' no existe.`);
-    process.exit(1);
-}
-
-const manifestPath = path.join(absolutePath, 'manifest.json');
-const extensionPath = path.join(absolutePath, 'extension.json');
-const appPath = path.join(absolutePath, 'app.json');
-
-let manifest;
-let type = 'plugin';
-
-if (fs.existsSync(appPath)) {
-    manifest = JSON.parse(fs.readFileSync(appPath, 'utf8'));
-    type = 'app';
-} else if (fs.existsSync(extensionPath)) {
-    manifest = JSON.parse(fs.readFileSync(extensionPath, 'utf8'));
-    type = 'extension';
-} else if (fs.existsSync(manifestPath)) {
-    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-} else {
-    console.error(`❌ Error: No se encontró app.json, extension.json ni manifest.json en ${absolutePath}`);
-    process.exit(1);
-}
-
-const zip = new JSZip();
-
-function addFilesToZip(dir, zipInstance, rootDir) {
-    const items = fs.readdirSync(dir);
-    
-    items.forEach(item => {
-        const fullPath = path.join(dir, item);
-        const stats = fs.statSync(fullPath);
-        
-        // Excluir node_modules y archivos ocultos
-        if (item === 'node_modules' || item.startsWith('.')) return;
-
-        if (stats.isDirectory()) {
-            const folder = zipInstance.folder(item);
-            addFilesToZip(fullPath, folder, rootDir);
-        } else {
-            const content = fs.readFileSync(fullPath);
-            zipInstance.file(item, content);
-        }
-    });
-}
-
-console.log(`📦 Empaquetando ${type}: ${manifest.name} (${manifest.id})...`);
-
-addFilesToZip(absolutePath, zip, absolutePath);
-
-const typeToExt = {
-    'app': 'gapp',
-    'extension': 'gext',
-    'plugin': 'gplugin'
-};
-
-const ext = typeToExt[type];
-const outputFileName = `${manifest.id}_v${manifest.version || '1.0.0'}.${ext}`;
-const outputPath = path.join(process.cwd(), outputFileName);
-
-zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
-    .then(buffer => {
-        fs.writeFileSync(outputPath, buffer);
-        console.log(`✅ ¡Éxito! Paquete generado en: ${outputPath}`);
-    })
-    .catch(err => {
-        console.error('❌ Error al generar el ZIP:', err);
         process.exit(1);
-    });
+    }
+
+    const absolutePath = path.resolve(pluginPath);
+
+    if (!fs.existsSync(absolutePath)) {
+        console.error(`❌ Error: La ruta '${pluginPath}' no existe.`);
+        process.exit(1);
+    }
+
+    const manifestPath = path.join(absolutePath, 'manifest.json');
+    const extensionPath = path.join(absolutePath, 'extension.json');
+    const appPath = path.join(absolutePath, 'app.json');
+
+    let manifest;
+    let type = 'plugin';
+
+    if (fs.existsSync(appPath)) {
+        manifest = JSON.parse(fs.readFileSync(appPath, 'utf8'));
+        type = 'app';
+    } else if (fs.existsSync(extensionPath)) {
+        manifest = JSON.parse(fs.readFileSync(extensionPath, 'utf8'));
+        type = 'extension';
+    } else if (fs.existsSync(manifestPath)) {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } else {
+        console.error(`❌ Error: No se encontró app.json, extension.json ni manifest.json en ${absolutePath}`);
+        process.exit(1);
+    }
+
+    const zip = new JSZip();
+
+    function addFilesToZip(dir, zipInstance, rootDir) {
+        const items = fs.readdirSync(dir);
+        
+        items.forEach(item => {
+            const fullPath = path.join(dir, item);
+            const stats = fs.statSync(fullPath);
+            
+            // Excluir node_modules y archivos ocultos
+            if (item === 'node_modules' || item.startsWith('.')) return;
+
+            if (stats.isDirectory()) {
+                const folder = zipInstance.folder(item);
+                addFilesToZip(fullPath, folder, rootDir);
+            } else {
+                const content = fs.readFileSync(fullPath);
+                zipInstance.file(item, content);
+            }
+        });
+    }
+
+    console.log(`📦 Empaquetando ${type}: ${manifest.name} (${manifest.id})...`);
+
+    addFilesToZip(absolutePath, zip, absolutePath);
+
+    const typeToExt = {
+        'app': 'gapp',
+        'extension': 'gext',
+        'plugin': 'gplugin'
+    };
+
+    const ext = typeToExt[type];
+    const outputFileName = `${manifest.id}_v${manifest.version || '1.0.0'}.${ext}`;
+    const outputPath = path.join(process.cwd(), outputFileName);
+
+    zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+        .then(buffer => {
+            fs.writeFileSync(outputPath, buffer);
+            console.log(`✅ ¡Éxito! Paquete generado en: ${outputPath}`);
+        })
+        .catch(err => {
+            console.error('❌ Error al generar el ZIP:', err);
+            process.exit(1);
+        });
+}
