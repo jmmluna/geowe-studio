@@ -162,9 +162,8 @@ try {
     JSZip = require('jszip');
 } catch (e) {
     console.error(`
-    ❌ Error: No se encontró el módulo 'jszip'.
-    Para empaquetar plugins es necesario instalar las dependencias.
-    Por favor, ejecuta: npm install jszip
+    ❌ Para usar las funciones de empaquetado es necesario instalar las dependencias.
+    Por favor, ejecuta: npm install
     `);
     process.exit(1);
 }
