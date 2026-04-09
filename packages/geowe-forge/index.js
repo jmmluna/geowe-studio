@@ -95,9 +95,37 @@ export interface GeoWEPlugin {
     fs.writeFileSync(path.join(targetPath, 'geowe-studio.d.ts'), sdkTypes);
     
     // Inyectar una copia del propio script para empaquetado autónomo
-    const currentScript = fs.readFileSync(__filename, 'utf8');
-    fs.writeFileSync(path.join(targetPath, 'forge.js'), currentScript);
+    const scriptUrl = 'https://raw.githubusercontent.com/jmmluna/geowe-studio/main/packages/geowe-forge/index.js';
+    const forgeFile = path.join(targetPath, 'forge.js');
 
+    if (__filename === '[stdin]') {
+        // Si viene por pipe, lo descargamos de GitHub
+        const https = require('https');
+        const file = fs.createWriteStream(forgeFile);
+        https.get(scriptUrl, function(response) {
+            response.pipe(file);
+            file.on('finish', () => {
+                file.close();
+                printSuccess(targetPath);
+            });
+        }).on('error', (err) => {
+            console.warn('⚠️ No se pudo descargar forge.js automáticamente. Puedes hacerlo manualmente desde GitHub.');
+            printSuccess(targetPath);
+        });
+    } else {
+        // Si se ejecuta desde un archivo local, lo copiamos directamente
+        try {
+            const currentScript = fs.readFileSync(__filename, 'utf8');
+            fs.writeFileSync(forgeFile, currentScript);
+            printSuccess(targetPath);
+        } catch (e) {
+            console.warn('⚠️ No se pudo copiar forge.js. Puedes descargarlo manualmente.');
+            printSuccess(targetPath);
+        }
+    }
+}
+
+function printSuccess(targetPath) {
     console.log(`
     ✨ Proyecto inicializado con éxito en: ${targetPath}
     

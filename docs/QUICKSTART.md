@@ -5,7 +5,7 @@ Bienvenido a la guía paso a paso para crear tu primera extensión en GeoWE Stud
 ---
 
 ## Paso 1: Inicialización ultra-rápida
-No necesitas clonar el repositorio principal. Puedes inicializar un entorno de desarrollo completo con un solo comando:
+Puedes inicializar un entorno de desarrollo completo con un solo comando:
 
 1.  **Crea y entra en tu carpeta**:
     ```bash
