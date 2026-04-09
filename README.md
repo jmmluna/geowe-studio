@@ -23,7 +23,10 @@
 ## 📚 Documentación para Desarrolladores
 Hemos estructurado la documentación técnica en secciones especializadas para facilitar su acceso:
 
-### 🚀 [Guía de Desarrollo de Plugins](docs/DEVELOPMENT.md)
+### ⚡ [Guía de Inicio Rápido (Quick Start)](docs/QUICKSTART.md)
+**Empieza aquí**: Crea y ejecuta tu primer plugin en menos de 5 minutos siguiendo este tutorial paso a paso.
+
+### 🚀 [Guía de Desarrollo Detallada](docs/DEVELOPMENT.md)
 Aprende a usar **GeoWE Forge**, descubre la API de **PluginContext** (UI, Mapa, Eventos) y cómo integrar tus propios componentes de Vue o React.
 
 ### ⚙️ [Arquitectura y Estabilidad](docs/ARCHITECTURE.md)

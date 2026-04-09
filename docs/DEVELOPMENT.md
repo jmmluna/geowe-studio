@@ -35,7 +35,29 @@ Cada plugin recibe un objeto `context` que proporciona acceso seguro a las funci
 
 A continuación se muestran ejemplos funcionales de interacción con la API de GeoWE Studio.
 
-### 0. Estructura Básica de un Plugin (TypeScript)
+### 1. Estructura Básica de un Plugin (VanillaJS)
+Un plugin debe exportar por defecto un objeto que cumpla con la interfaz `GeoWEPlugin`.
+
+```js
+export default {
+  id: 'mi-herramienta-unica',
+  name: 'Mi Primera Herramienta',
+  version: '1.0.0',
+
+  activate: (context) => {
+    console.log('¡Herramienta GeoWE activada!');
+    context.ui.setStatus('Plugin cargado correctamente');
+    
+    // Aquí registras tus comandos, botones y paneles
+  },
+
+  deactivate: () => {
+    console.log('Limpiando recursos...');
+  }
+};
+```
+
+### 2. Estructura Básica de un Plugin (TypeScript)
 Todo plugin debe exportar por defecto un objeto que cumpla con la interfaz `GeoWEPlugin`.
 
 ```typescript
@@ -59,7 +81,7 @@ export default {
 } as GeoWEPlugin;
 ```
 
-### 1. Botón y Mensaje de Estado
+### 3. Botón y Mensaje de Estado
 Aprende a registrar un comando y mostrar un saludo en la barra de estado inferior.
 
 ```typescript
@@ -75,7 +97,7 @@ context.ui.addButton({
 });
 ```
 
-### 2. Diálogo Modal
+### 4. Diálogo Modal
 Muestra una ventana emergente nativa con contenido HTML personalizado.
 
 ```typescript
@@ -87,7 +109,7 @@ context.ui.addModal({
 });
 ```
 
-### 3. Panel Lateral
+### 5. Panel Lateral
 Integra herramientas complejas o formularios directamente en la interfaz lateral.
 
 ```typescript
@@ -136,6 +158,71 @@ Puedes compartir aplicaciones o plugins enviando una URL con parámetros, facili
 - **?load=URL**: Carga genérica de recursos.
 
 *Ejemplo: `https://studio.geowe.org/?app=https://mi-servidor.com/mi-visor.gapp`*
+
+---
+
+## 🎨 Iconografía
+GeoWE Studio utiliza la librería **[Material Icons](https://fonts.google.com/icons)** como estándar visual. Los plugins pueden integrar iconos mediante simples cadenas de texto (nombres de iconos).
+
+- **Cómo usarlos**: En cualquier campo `icon` de la API (botones, secciones, manifiestos), indica el nombre del icono en minúsculas y separado por guiones bajos (ej: `settings`, `file_download`, `public`).
+- **Iconos Comunes en GeoWE**:
+    - `layers`: Gestión de capas.
+    - `chat`: Mensajes y notificaciones.
+    - `public`: Servicios remotos (PNOA/IGN).
+    - `settings`: Configuración y herramientas.
+
+---
+
+## 📦 Especificación de Formatos
+
+### 1. Plugin (.gplugin)
+Es el componente atómico de GeoWE. Contiene la lógica y la interfaz de una herramienta específica.
+- **Archivo de Manifiesto**: `manifest.json`
+```json
+{
+  "id": "mi-plugin",
+  "name": "Mi Plugin",
+  "version": "1.0.0",
+  "main": "index.mjs",           // Punto de entrada ESM
+  "styles": ["style.css"],      // CSS opcional
+  "icon": "settings",           // Icono en el catálogo
+  "description": "Breve descripción de la funcionalidad"
+}
+```
+
+### 2. Extensión (.gext)
+Agrupación lógica de plugins que se instalan y activan como un pack.
+- **Archivo de Manifiesto**: `extension.json`
+- **Estructura**: El ZIP debe contener una carpeta `plugins/` con los plugins referenciados.
+```json
+{
+  "id": "gis-pack",
+  "name": "GIS Essentials Pack",
+  "version": "1.0.0",
+  "plugins": ["geojson-loader", "vector-styler"]
+}
+```
+
+### 3. Aplicación (.gapp)
+Entorno completo preconfigurado con branding corporativo y control de herramientas disponibles.
+- **Archivo de Manifiesto**: `app.json`
+- **Branding**: Permite adjuntar un logo y definir un slogan propio.
+```json
+{
+  "id": "geowe-custom",
+  "name": "Mi Visor SIG",
+  "slogan": "Gestión Territorial Avanzada",
+  "logo": "logo-visor.png",
+  "config": {
+    "showPluginManagement": false,     // Oculta el cargador de plugins
+    "disableInternalPlugins": [        // Desactiva herramientas nativas
+      "plugin-info-plugin"
+    ]
+  },
+  "extensions": ["gis-pack"],           // Lista de extensiones (.gext)
+  "plugins": ["mi-plugin"]             // Plugins adicionales (.gplugin)
+}
+```
 
 ---
 
