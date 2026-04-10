@@ -184,11 +184,49 @@ Es el componente atómico de GeoWE. Contiene la lógica y la interfaz de una her
   "name": "Mi Plugin",
   "version": "1.0.0",
   "main": "index.mjs",           // Punto de entrada ESM
-  "styles": ["style.css"],      // CSS opcional
+  "styles": ["style.css"],      // CSS opcional (se carga automáticamente)
+  "templates": ["styler.html"], // Plantillas HTML opcionales
   "icon": "settings",           // Icono en el catálogo
   "description": "Breve descripción de la funcionalidad"
 }
 ```
+
+---
+
+## 🎨 Separación de Estilos y Plantillas
+
+Para mantener un código limpio y profesional, GeoWE Studio permite separar la lógica (JS) de la presentación (CSS/HTML).
+
+### 1. Carga de Estilos
+Si incluyes archivos en el campo `"styles"` de tu `manifest.json`, GeoWE Studio los inyectará automáticamente en el DOM al activar el plugin y los eliminará al desactivarlo.
+
+### 2. Uso de Plantillas HTML
+Si incluyes archivos en `"templates"`, puedes recuperarlos desde tu código utilizando el servicio de recursos:
+
+```javascript
+export default {
+  id: 'mi-styler',
+  activate: async (context) => {
+    // 1. Recuperar el contenido de la plantilla
+    const html = context.resources.getTemplate('styler.html');
+
+    // 2. Usarlo en un panel o modal
+    context.ui.addPanel({
+      id: 'styler-panel',
+      title: 'Configuración de Estilos',
+      content: html,
+      onRender: (el) => {
+        // Manipulación del DOM de la plantilla
+        el.querySelector('#apply-btn').onclick = () => {
+          console.log('Aplicando cambios...');
+        };
+      }
+    });
+  }
+};
+```
+
+Esta arquitectura permite que tu archivo `index.js` permanezca enfocado en la lógica, mientras que el diseño se gestiona en archivos `.css` y `.html` independientes con soporte completo de los editores de código (resaltado de sintaxis, etc.).
 
 ### 2. Extensión (.gext)
 Agrupación lógica de plugins que se instalan y activan como un pack.
