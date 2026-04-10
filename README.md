@@ -10,6 +10,10 @@
 <p align="center">
   <img src="screenshot/geowe-studio-app.png" width="800" alt="GeoWE Studio Screenshot">
 </p>
+  
+
+Puedes acceder a **GeoWE Studio** desde [aquí](https://jmmluna.github.io/geowe-studio/studio/bin)
+
 
 ---
 
