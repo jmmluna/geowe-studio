@@ -1,4 +1,7 @@
 # GeoWE Studio
+
+Es una plataforma SIG web basada en plugins, diseñada para desarrolladores modernos. Permite construir, extender y personalizar funcionalidades geoespaciales directamente en el navegador usando TypeScript.
+
 ### SIG Extensible para la Web Moderna
 
 <p align="center">
