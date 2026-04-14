@@ -126,7 +126,7 @@ export class PluginManagerService {
         }
       },
       ui: {
-        addButton: (options: { id: string, label: string, icon?: string, commandId: string }) => {
+        addButton: (options: { id: string, label: string, icon?: string, commandId: string, activeOnSidebarId?: string }) => {
           this.uiButtons.push(options);
           this.eventBus.emit({ type: 'ui:changed' });
         },
@@ -162,6 +162,7 @@ export class PluginManagerService {
           // Simplemente emitimos para que Angular re-renderice el contenido dinámico
           this.eventBus.emit({ type: 'ui:panelsChanged' });
         },
+        getUIPanels: () => this.uiPanels,
         setStatus: (message: string) => {
           this.eventBus.emit({ type: 'ui:statusChanged', payload: message });
         },
@@ -184,14 +185,24 @@ export class PluginManagerService {
           document.head.appendChild(style);
         },
         addSidebarSection: (options: any) => {
-          this.sidebarSections.push({
-            ...options,
-            isOpen: false
-          });
+          const index = this.sidebarSections.findIndex(s => s.id === options.id);
+          if (index !== -1) {
+            this.sidebarSections[index] = { ...this.sidebarSections[index], ...options };
+          } else {
+            this.sidebarSections.push({
+              ...options,
+              isOpen: false
+            });
+          }
           this.eventBus.emit({ type: 'ui:sidebarSectionsChanged' });
         },
         registerSidebar: (options: any) => {
-          this.sidebarPanels.push(options);
+          const index = this.sidebarPanels.findIndex(p => p.id === options.id);
+          if (index !== -1) {
+            this.sidebarPanels[index] = { ...this.sidebarPanels[index], ...options };
+          } else {
+            this.sidebarPanels.push(options);
+          }
           this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
         },
         components: {

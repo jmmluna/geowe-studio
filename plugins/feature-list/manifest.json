@@ -2,7 +2,10 @@
   "id": "feature-list",
   "name": "Feature List Data Table",
   "version": "1.0.0",
-  "description": "Lista los elementos y propiedades de una capa vectorial.",
+  "description": "Visualización de atributos en categorías alfanuméricas.",
+  "author": "GeoWE Studio",
+  "category": "Análisis",
+  "icon": "table_view",
   "main": "index.js",
   "templates": ["feature-list.html"]
 }

@@ -2,6 +2,10 @@
   "id": "vector-styler",
   "name": "Estilizador Vectorial Pro",
   "version": "1.2.0",
+  "description": "Personalización dinámica de simbología vectorial.",
+  "author": "GeoWE Studio",
+  "category": "Visualización",
+  "icon": "palette",
   "main": "index.js",
   "styles": ["theme.css"],
   "templates": ["styler.html"]

@@ -20,7 +20,7 @@ import { SplashScreenComponent } from './core/components/splash-screen/splash-sc
 
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
-import PluginInfoPlugin from './plugins/plugin-info.plugin';
+import HubManagerPlugin from './plugins/hub-manager/hub-manager.plugin';
 
 
 @Component({
@@ -65,6 +65,7 @@ export class App implements OnInit {
       style: { Style, Fill, Stroke }
     };
     this.pluginManager.initContext(this.map, { title: this.appTitle, logo: this.appLogo });
+    (window as any).pluginManager = this.pluginManager;
 
     // Registro de comandos Core de UI para plugins
     const ctx = this.pluginManager.pluginContext;
@@ -73,7 +74,12 @@ export class App implements OnInit {
       this.cdr.detectChanges();
     });
     ctx.commands.register('ui:activePluginSidebar', (id: string) => this.activePluginSidebar(id));
-    ctx.commands.register('ui:resetSidebar', () => this.resetSidebar());
+    ctx.commands.register('ui:resetSidebar', () => {
+      this.resetSidebar();
+      // Desactivar botones de plugins que lanzan sidebars
+      this.uiButtons.forEach(btn => btn.isActive = false);
+      this.cdr.detectChanges();
+    });
 
     this.eventBus.on('ui:statusChanged', (message: string) => {
       this.statusMessage = message;
@@ -91,6 +97,15 @@ export class App implements OnInit {
         safeContent: this.sanitizer.bypassSecurityTrustHtml(p.content)
       }));
       this.cdr.detectChanges();
+
+      // Forzar re-render de eventos si es el panel activo
+      const activePanel = this.sidebarPanels.find(p => p.id === this.activeSidebarId);
+      if (activePanel && activePanel.onRender) {
+        setTimeout(() => {
+          const el = document.getElementById(`sidebar-dedicated-body-${activePanel.id}`);
+          if (el) activePanel.onRender(el);
+        }, 50);
+      }
     });
 
     // Escuchar configuraciones de Aplicación (.gapp)
@@ -239,7 +254,7 @@ export class App implements OnInit {
   private loadInternalPlugin() {
     this.pluginManager.loadPluginFromModule({ default: LayerManagerPlugin });
     this.pluginManager.loadPluginFromModule({ default: LayerCatalogPlugin });
-    this.pluginManager.loadPluginFromModule({ default: PluginInfoPlugin });
+    this.pluginManager.loadPluginFromModule({ default: HubManagerPlugin });
   }
 
 
@@ -282,7 +297,20 @@ export class App implements OnInit {
   }
 
   public activePluginSidebar(id: string) {
+    // Comportamiento de Toggle: si ya está activo y visible, cerramos o volvemos a default
+    if (this.activeSidebarId === id && this.isSidebarVisible) {
+      this.resetSidebar();
+      return;
+    }
+
     this.activeSidebarId = id;
+    this.isSidebarVisible = true;
+    
+    // Sincronizar estado visual de los botones de la barra de herramientas (Desacoplado)
+    this.uiButtons.forEach(btn => {
+      btn.isActive = (btn.activeOnSidebarId === id) || (btn.id === id); 
+    });
+
     const panel = this.sidebarPanels.find(p => p.id === id);
     
     if (panel && panel.onRender) {
@@ -297,6 +325,7 @@ export class App implements OnInit {
 
   public resetSidebar() {
     this.activeSidebarId = 'default';
+    this.uiButtons.forEach(btn => btn.isActive = false);
     this.eventBus.emit({ type: 'ui:sidebarChanged', payload: { activeId: 'default', isVisible: this.isSidebarVisible } });
     this.cdr.detectChanges();
   }

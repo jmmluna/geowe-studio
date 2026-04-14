@@ -45,7 +45,7 @@ export interface UIComponents {
 }
 
 export interface UIAPI {
-  addButton: (options: { id: string, label: string, icon?: string, commandId: string }) => void;
+  addButton: (options: { id: string, label: string, icon?: string, commandId: string, activeOnSidebarId?: string }) => void;
   addPanel: (options: { id: string, title: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
   addModal: (options: { id: string, title: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
   removePanel: (id: string) => void;
@@ -53,6 +53,7 @@ export interface UIAPI {
 
 
   updatePanel: (id: string) => void;
+  getUIPanels: () => any[];
   registerLayerAction: (descriptor: { id: string, label: string, icon?: string, callback: (layerName: string) => void }) => void;
   getLayerActions: () => any[];
   setStatus: (message: string) => void;

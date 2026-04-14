@@ -48,9 +48,14 @@ if (args[0] === 'init') {
         id: pluginId,
         name: pluginId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         version: "1.0.0",
+        description: "Mi nueva herramienta para GeoWE Studio",
+        author: "Dev Name",
+        category: "General",
         main: "index.js",
         icon: "extension",
-        description: "Mi nueva herramienta para GeoWE Studio"
+        repository: "",
+        downloadUrl: "",
+        screenshots: []
     };
 
     const pkgJson = {

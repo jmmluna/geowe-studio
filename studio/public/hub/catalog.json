@@ -1,0 +1,97 @@
+{
+  "lastUpdated": "2026-04-13T14:18:00Z",
+  "plugins": [
+    {
+      "id": "vector-styler-plugin",
+      "name": "Estilizador Vectorial Pro",
+      "author": "GeoWE Core Team",
+      "category": "Visualización",
+      "technology": "Javascript",
+      "version": "1.2.0",
+      "description": "Herramienta avanzada para personalizar el estilo de capas vectoriales de forma dinámica.",
+      "icon": "palette",
+      "repository": "https://github.com/jmmluna/geowe-studio/tree/main/plugins/vector-styler",
+      "downloadUrl": "https://github.com/jmmluna/geowe-studio/raw/refs/heads/main/plugins/vector-styler_v1.2.0.gplugin",
+      "screenshots": [],
+      "tags": [
+        "estilo",
+        "vector",
+        "diseño"
+      ]
+    },
+    {
+      "id": "feature-list",
+      "name": "Feature List Data Table",
+      "author": "GeoWE Core Team",
+      "category": "Análisis",
+      "technology": "Typescript",
+      "version": "1.0.0",
+      "description": "Visualiza los atributos de las entidades vectoriales en una tabla interactiva.",
+      "icon": "table_view",
+      "repository": "https://github.com/jmmluna/geowe-studio/tree/main/plugins/feature-list",
+      "downloadUrl": "https://github.com/jmmluna/geowe-studio/raw/refs/heads/main/plugins/feature-list_v1.0.0.gplugin",
+      "screenshots": [],
+      "tags": [
+        "tabla",
+        "atributos",
+        "datos"
+      ]
+    },
+    {
+      "id": "map-report",
+      "name": "Mapa a PDF",
+      "author": "GeoWE Core Team",
+      "category": "Exportación",
+      "technology": "React",
+      "version": "1.0.0",
+      "description": "Genera reportes técnicos en formato PDF incluyendo mapa, escala, leyenda y metadatos.",
+      "icon": "picture_as_pdf",
+      "repository": "https://github.com/jmmluna/geowe-studio/tree/main/plugins/map-report",
+      "downloadUrl": "https://github.com/jmmluna/geowe-studio/raw/refs/heads/main/plugins/map-report_v1.0.0.gplugin",
+      "screenshots": [],
+      "tags": [
+        "pdf",
+        "reporte",
+        "impresión"
+      ]
+    },
+    {
+      "id": "layer-exporter-vue",
+      "name": "Exportador de Capas Vectoriales (Vue)",
+      "author": "GeoWE Core Team",
+      "category": "Exportación",
+      "technology": "Vue",
+      "version": "1.0.0",
+      "description": "Exporta capas vectoriales a formatos estándar como GeoJSON, SHP, GPKG, WKT y KML con reproyección.",
+      "icon": "file_download",
+      "repository": "https://github.com/jmmluna/geowe-studio/tree/main/plugins/layer-exporter-vue",
+      "downloadUrl": "https://github.com/jmmluna/geowe-studio/raw/refs/heads/main/plugins/layer-exporter-vue_v1.0.0.gplugin",
+      "screenshots": [],
+      "tags": [
+        "exportar",
+        "vue",
+        "geopackage",
+        "shapefile"
+      ]
+    },
+    {
+      "id": "geojson-loader-dynamic",
+      "name": "Cargador GeoJSON Dinámico",
+      "author": "GeoWE Core Team",
+      "category": "Carga de Datos",
+      "technology": "Javascript",
+      "version": "1.0.0",
+      "description": "Carga archivos GeoJSON de forma dinámica desde una URL o desde tu equipo local directamente al mapa.",
+      "icon": "upload_file",
+      "repository": "https://github.com/jmmluna/geowe-studio/blob/main/plugins/geojson-loader.plugin.js",
+      "downloadUrl": "https://github.com/jmmluna/geowe-studio/raw/refs/heads/main/plugins/geojson-loader.plugin.js",
+      "screenshots": [],
+      "tags": [
+        "geojson",
+        "carga",
+        "dinámico",
+        "url"
+      ]
+    }
+  ]
+}
