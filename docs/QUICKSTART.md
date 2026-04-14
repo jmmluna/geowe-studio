@@ -4,6 +4,15 @@ Bienvenido a la guía paso a paso para crear tu primera extensión en GeoWE Stud
 
 ---
 
+## 📋 Prerrequisitos
+
+Antes de empezar, asegúrate de tener instalado en tu sistema:
+
+1.  **Node.js**: Se recomienda la versión **v18 o superior** (LTS). Puedes descargarlo en [nodejs.org](https://nodejs.org/).
+2.  **curl**: Herramienta de línea de comandos para transferir datos. La mayoría de sistemas modernos (macOS, Linux y Windows 10/11) ya la traen preinstalada. La usaremos para descargar el bootstrap de forma rápida.
+
+---
+
 ## Paso 1: Inicialización ultra-rápida
 Puedes inicializar un entorno de desarrollo completo con un solo comando:
 

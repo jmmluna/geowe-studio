@@ -1,6 +1,6 @@
 # GeoWE Studio
 
-Es una plataforma SIG web basada en plugins, diseñada para desarrolladores modernos. Permite construir, extender y personalizar funcionalidades geoespaciales directamente en el navegador usando TypeScript.
+Es una plataforma SIG web basada en plugins, diseñada para [desarrolladores modernos](docs/MODERN_DEVELOPERS.md). Permite construir, extender y personalizar funcionalidades geoespaciales directamente en el navegador usando el ecosistema JavaScript.
 
 ### SIG Extensible para la Web Moderna
 
@@ -8,7 +8,7 @@ Es una plataforma SIG web basada en plugins, diseñada para desarrolladores mode
   <img src="studio/public/logo-geowe.png" width="180" alt="GeoWE Studio Logo">
 </p>
 
-**GeoWE Studio** no es solo un SIG; es un **Runtime + SDK** de código abierto diseñado específicamente para construir aplicaciones SIG en la web. Su objetivo es proporcionar una infraestructura extensible basada en estándares OGC que permite crear herramientas geoespaciales a medida mediante una arquitectura de micro-plugins agnóstica al framework.
+**GeoWE Studio** no es solo un SIG; es un **Runtime + SDK** de código abierto diseñado específicamente para construir aplicaciones SIG en la web. Su objetivo es proporcionar una infraestructura extensible basada en estándares OGC que permite crear herramientas geoespaciales a medida mediante una arquitectura de micro-plugins (componente de software ligero y especializado diseñado para añadir una funcionalidad muy específica y pequeña a un programa principal) agnóstica al framework.
 
 <p align="center">
   <img src="screenshot/geowe-studio-app.png" width="800" alt="GeoWE Studio Screenshot">
