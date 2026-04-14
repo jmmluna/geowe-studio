@@ -8,7 +8,7 @@
     "config": {
         "showPluginManagement": false,
         "disableInternalPlugins": [
-            "plugin-info-plugin",
+            "hub-manager-plugin",
             "layer-manager-plugin",
             "layer-catalog-plugin"
         ]

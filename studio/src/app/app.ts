@@ -20,7 +20,7 @@ import { SplashScreenComponent } from './core/components/splash-screen/splash-sc
 
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
-import HubManagerPlugin from './plugins/hub-manager/hub-manager.plugin';
+import HubManagerPlugin from './plugins/hub-manager.plugin';
 
 
 @Component({

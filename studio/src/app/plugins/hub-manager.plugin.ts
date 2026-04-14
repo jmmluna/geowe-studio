@@ -1,4 +1,4 @@
-import { PluginContext } from '../../core/plugin-context';
+import { PluginContext } from '../core/plugin-context';
 
 export default {
     id: 'hub-manager-plugin',

@@ -254,7 +254,7 @@ Entorno completo preconfigurado con branding corporativo y control de herramient
   "config": {
     "showPluginManagement": false,     // Oculta el cargador de plugins
     "disableInternalPlugins": [        // Desactiva herramientas nativas
-      "plugin-info-plugin"
+      "hub-manager-plugin"
     ]
   },
   "extensions": ["gis-pack"],           // Lista de extensiones (.gext)
