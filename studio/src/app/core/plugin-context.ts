@@ -46,7 +46,7 @@ export interface UIComponents {
 
 export interface UIAPI {
   addButton: (options: { id: string, label: string, icon?: string, commandId: string, activeOnSidebarId?: string }) => void;
-  addPanel: (options: { id: string, title: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
+  addPanel: (options: { id: string, title: string, content: string, isModal?: boolean, onRender?: (el: HTMLElement) => void }) => void;
   addModal: (options: { id: string, title: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
   removePanel: (id: string) => void;
 
@@ -54,7 +54,7 @@ export interface UIAPI {
 
   updatePanel: (id: string) => void;
   getUIPanels: () => any[];
-  registerLayerAction: (descriptor: { id: string, label: string, icon?: string, callback: (layerName: string) => void }) => void;
+  registerLayerAction: (descriptor: { id?: string, label: string, icon?: string, supportedLayerTypes?: ('vector' | 'raster')[], callback: (layerName: string) => void }) => void;
   getLayerActions: () => any[];
   setStatus: (message: string) => void;
 
@@ -63,8 +63,9 @@ export interface UIAPI {
   addStyles: (css: string) => void;
   addSidebarSection: (options: { id: string, title: string, icon: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
   registerSidebar: (options: { id: string, title: string, icon: string, content: string, onRender?: (el: HTMLElement) => void }) => void;
+  removeSidebar: (id: string) => void;
+  removeButton: (id: string) => void;
   components: UIComponents;
-
 }
 
 
@@ -85,5 +86,5 @@ export interface GeoWEPlugin {
   name: string;
   version?: string;
   activate: (ctx: PluginContext) => Promise<void> | void;
-  deactivate: () => Promise<void> | void;
+  deactivate: (ctx: PluginContext) => Promise<void> | void;
 }

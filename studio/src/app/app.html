@@ -73,7 +73,7 @@
     </div>
 
     <!-- VISTA DEDICADA DE PLUGIN -->
-    <div *ngFor="let panel of sidebarPanels">
+    <div *ngFor="let panel of sidebarPanels; trackBy: trackById">
       <div class="plugin-section dedicated-section" *ngIf="activeSidebarId === panel.id">
         <div class="section-title">
           <span class="material-icons">{{ panel.icon || 'extension' }}</span>
@@ -81,7 +81,7 @@
           <span style="flex: 1"></span>
           <button class="close-panel-btn" (click)="resetSidebar()">×</button>
         </div>
-        <div class="section-content dedicated-content" [innerHTML]="panel.safeContent" [id]="'sidebar-dedicated-body-' + panel.id">
+        <div class="section-content dedicated-content" [innerHTML]="panel.safeContent" [id]="'sidebar-dedicated-body-' + panel.id" [pluginContainer]="panel.id">
         </div>
       </div>
     </div>
@@ -111,7 +111,7 @@
             </div>
             <button (click)="$event.stopPropagation(); closePanel(panel.id)">×</button>
           </div>
-          <div class="panel-content" *ngIf="panel.isExpanded" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id"></div>
+          <div class="panel-content" *ngIf="panel.isExpanded" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id" [pluginContainer]="panel.id"></div>
         </div>
       </ng-container>
     </div>
@@ -127,7 +127,7 @@
             </div>
             <button (click)="closePanel(panel.id)">×</button>
           </div>
-          <div class="panel-content" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id"></div>
+          <div class="panel-content" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id" [pluginContainer]="panel.id"></div>
         </div>
       </div>
     </div>

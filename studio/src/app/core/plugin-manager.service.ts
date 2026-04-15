@@ -20,6 +20,7 @@ export class PluginManagerService {
   public pluginContext!: PluginContext;
   private olMap: any;
   private disabledPluginIds = new Set<string>();
+  private currentPluginContextId: string | null = null;
 
   private activeLoads: number = 0;
 
@@ -88,46 +89,26 @@ export class PluginManagerService {
         },
         setVisible: (name: string, visible: boolean) => {
           const layer = this.olMap.getLayers().getArray().find((l: any) => l.get('name') === name);
-          if (layer) {
-            layer.setVisible(visible);
-            this.eventBus.emit({ type: 'layer:changed' });
-          }
+          if (layer) layer.setVisible(visible);
         },
-        setStyle: (name: string, styleOptions: any) => {
-          const layer = this.olMap.getLayers().getArray().find((l: any) => l.get('name') === name);
-          if (layer && (layer.get('type') === 'vector' || layer.constructor.name.includes('Vector'))) {
-            // Importación dinámica simulada o uso de las clases de OL si están disponibles
-            // En este entorno, asumimos que podemos acceder a los constructores de estilo o usar setStyle directo
-            const ol = (window as any).ol; // Asumiendo que OL está en window o disponible
-            if (ol) {
-              const newStyle = new ol.style.Style({
-                fill: styleOptions.fill ? new ol.style.Fill({ color: styleOptions.fill }) : undefined,
-                stroke: styleOptions.stroke ? new ol.style.Stroke({
-                  color: styleOptions.stroke,
-                  width: styleOptions.width || 2
-                }) : undefined
-              });
-              layer.setStyle(newStyle);
-              this.eventBus.emit({ type: 'layer:changed' });
-            }
-          }
+        setStyle: (name: string, style: { fill?: string, stroke?: string, width?: number }) => {
+          this.eventBus.emit({ type: 'layer:setStyle', payload: { name, style } });
         },
         zoomToLayer: (name: string) => {
-
           const layer = this.olMap.getLayers().getArray().find((l: any) => l.get('name') === name);
-          if (layer && (layer as any).getSource()?.getExtent) {
-            const source = (layer as any).getSource();
-            // Para fuentes vectoriales
-            if (source.getExtent) {
-              const extent = source.getExtent();
-              this.olMap.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 1000 });
-            }
+          if (layer && layer.getSource()?.getExtent) {
+            this.olMap.getView().fit(layer.getSource().getExtent(), { padding: [50, 50, 50, 50], duration: 1000 });
           }
         }
       },
       ui: {
         addButton: (options: { id: string, label: string, icon?: string, commandId: string, activeOnSidebarId?: string }) => {
-          this.uiButtons.push(options);
+          this.uiButtons.push({ ...options, ownerId: this.currentPluginContextId });
+          this.eventBus.emit({ type: 'ui:changed' });
+        },
+
+        removeButton: (id: string) => {
+          this.uiButtons = this.uiButtons.filter(b => b.id !== id);
           this.eventBus.emit({ type: 'ui:changed' });
         },
 
@@ -135,68 +116,73 @@ export class PluginManagerService {
           // Si ya existe un panel con ese ID, lo reemplazamos para actualizar contenido
           const index = this.uiPanels.findIndex(p => p.id === options.id);
           if (index !== -1) {
-            this.uiPanels[index] = { ...options, isExpanded: this.uiPanels[index].isExpanded !== undefined ? this.uiPanels[index].isExpanded : true };
+            this.uiPanels[index] = { ...options, ownerId: this.currentPluginContextId, isExpanded: this.uiPanels[index].isExpanded !== undefined ? this.uiPanels[index].isExpanded : true };
           } else {
-            this.uiPanels.push({ ...options, isExpanded: true });
+            this.uiPanels.push({ ...options, ownerId: this.currentPluginContextId, isExpanded: true });
           }
           this.eventBus.emit({ type: 'ui:panelsChanged' });
         },
+
         addModal: (options) => {
-          const index = this.uiPanels.findIndex(p => p.id === options.id);
-          if (index !== -1) {
-            this.uiPanels[index] = { ...options, isModal: true, isExpanded: true };
-          } else {
-            this.uiPanels.push({ ...options, isModal: true, isExpanded: true });
-          }
-          this.eventBus.emit({ type: 'ui:panelsChanged' });
+          this.pluginContext.ui.addPanel({ ...options, isModal: true });
         },
 
-
-
-
-        removePanel: (id) => {
+        removePanel: (id: string) => {
           this.uiPanels = this.uiPanels.filter(p => p.id !== id);
+          this.sidebarPanels = this.sidebarPanels.filter(p => p.id !== id);
+          this.eventBus.emit({ type: 'ui:panelsChanged' });
+          this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
+        },
+
+        updatePanel: (id: string) => {
           this.eventBus.emit({ type: 'ui:panelsChanged' });
         },
-        updatePanel: (id) => {
-          // Simplemente emitimos para que Angular re-renderice el contenido dinámico
-          this.eventBus.emit({ type: 'ui:panelsChanged' });
+
+        getUIPanels: () => {
+          return this.uiPanels;
         },
-        getUIPanels: () => this.uiPanels,
+
+        registerLayerAction: (descriptor: { id?: string, label: string, icon?: string, supportedLayerTypes?: ('vector' | 'raster')[], callback: (layerName: string) => void }) => {
+          // Asegurar un ID técnico predecible si no se proporciona uno
+          const actionId = descriptor.id || descriptor.label.toLowerCase().trim().replace(/\s+/g, '-');
+          
+          this.layerActions.push({ 
+            ...descriptor, 
+            id: actionId, 
+            ownerId: this.currentPluginContextId,
+            // Por defecto, asumimos capas vectoriales si no se especifica
+            supportedLayerTypes: descriptor.supportedLayerTypes || ['vector']
+          });
+          
+          this.eventBus.emit({ type: 'ui:layerActionsChanged' });
+        },
+
+        getLayerActions: () => {
+          return this.layerActions;
+        },
+
         setStatus: (message: string) => {
           this.eventBus.emit({ type: 'ui:statusChanged', payload: message });
         },
-        registerLayerAction: (descriptor) => {
-          this.layerActions.push(descriptor);
-          this.eventBus.emit({ type: 'ui:panelsChanged' }); // Forzamos refresco de listas de capas si están abiertas
-        },
-        getLayerActions: () => this.layerActions,
-        setButtonActive: (id: string, active: boolean) => {
 
-          const btn = (this as any).uiButtons.find((b: any) => b.id === id);
-          if (btn) {
-            btn.isActive = active;
-            (this as any).eventBus.emit({ type: 'ui:changed' });
-          }
+        setButtonActive: (id: string, active: boolean) => {
+          const btn = this.uiButtons.find(b => b.id === id);
+          if (btn) btn.isActive = active;
+          this.eventBus.emit({ type: 'ui:changed' });
         },
+
         addStyles: (css: string) => {
           const style = document.createElement('style');
           style.innerHTML = css;
           document.head.appendChild(style);
         },
-        addSidebarSection: (options: any) => {
-          const index = this.sidebarSections.findIndex(s => s.id === options.id);
-          if (index !== -1) {
-            this.sidebarSections[index] = { ...this.sidebarSections[index], ...options };
-          } else {
-            this.sidebarSections.push({
-              ...options,
-              isOpen: false
-            });
-          }
-          this.eventBus.emit({ type: 'ui:sidebarSectionsChanged' });
+
+        addSidebarSection: (options) => {
+          this.sidebarSections.push({ ...options, ownerId: this.currentPluginContextId });
+          this.eventBus.emit({ type: 'ui:sidebarChanged' });
         },
-        registerSidebar: (options: any) => {
+
+        registerSidebar: (options: { id: string, title: string, icon: string, content: string, onRender?: (el: HTMLElement) => void }) => {
           const index = this.sidebarPanels.findIndex(p => p.id === options.id);
           if (index !== -1) {
             this.sidebarPanels[index] = { ...this.sidebarPanels[index], ...options };
@@ -205,86 +191,129 @@ export class PluginManagerService {
           }
           this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
         },
-        components: {
 
-          button: (label, icon, type = 'primary', id) => `
-            <button class="geowe-ui-btn geowe-ui-btn-${type}" ${id ? `id="${id}"` : ''}>
-              ${icon ? `<span class="material-icons">${icon}</span>` : ''}
-              ${label}
-            </button>
-          `,
-          checkbox: (label, checked, id, dataAttrs = {}) => {
-            const attrs = Object.entries(dataAttrs).map(([k, v]) => `data-${k}="${v}"`).join(' ');
-            const checkboxId = id || `chk-${Math.random().toString(36).substr(2, 9)}`;
+        removeSidebar: (id: string) => {
+          this.sidebarPanels = this.sidebarPanels.filter(p => p.id !== id);
+          this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
+        },
+
+        components: {
+          button: (label, icon, type, id) => `<button class="geowe-ui-btn geowe-ui-btn-${type || 'primary'}" ${id ? `id="${id}"` : ''}>${icon ? `<span class="material-icons">${icon}</span>` : ''}${label}</button>`,
+
+          checkbox: (label, checked, id, dataAttrs) => {
+            const attrs = dataAttrs ? Object.entries(dataAttrs).map(([k, v]) => `data-${k}="${v}"`).join(' ') : '';
             return `
-              <div class="geowe-ui-checkbox-row">
-                <input type="checkbox" id="${checkboxId}" ${checked ? 'checked' : ''} ${attrs}>
-                <span>${label}</span>
-              </div>
-            `;
-          },
-          input: (placeholder, value = '', type = 'text', id) => {
+            <label class="geowe-ui-checkbox" ${id ? `id="label-${id}"` : ''} ${attrs}>
+              <input type="checkbox" ${checked ? 'checked' : ''} ${id ? `id="${id}"` : ''}>
+              <span class="geowe-ui-checkbox-box"></span>
+              ${label}
+            </label>
+          `},
+
+          input: (placeholder, value, type, id) => {
             if (type === 'file') {
               const fileId = id || `file-${Math.random().toString(36).substr(2, 9)}`;
               return `
-                <div class="geowe-ui-file-container">
-                  <input type="file" id="${fileId}" class="geowe-ui-file-input">
-                  <label for="${fileId}" class="geowe-ui-file-label">
-                    <span class="material-icons">cloud_upload</span>
-                    <span>${placeholder || 'Seleccionar archivo'}</span>
+                <div class="geowe-ui-file-container" style="margin-top: 10px;">
+                  <input type="file" id="${fileId}" class="geowe-ui-file-input" style="display:none">
+                  <label for="${fileId}" class="geowe-ui-file-label" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border: 2px dashed #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #f8fafc; color: #64748b;">
+                    <span class="material-icons" style="font-size: 32px; margin-bottom: 8px; color: #3182ce;">cloud_upload</span>
+                    <span style="font-size: 14px; font-weight: 600;">${placeholder || 'Seleccionar archivo'}</span>
+                    <span style="font-size: 12px; margin-top: 4px; opacity: 0.7;">Formato .geojson o .json</span>
                   </label>
                 </div>
               `;
             }
-            return `<input type="${type}" class="geowe-ui-input" placeholder="${placeholder}" value="${value}" ${id ? `id="${id}"` : ''}>`;
+            return `<input class="geowe-ui-input" type="${type || 'text'}" placeholder="${placeholder}" value="${value || ''}" ${id ? `id="${id}"` : ''}>`;
           },
+
           section: (title, icon, content) => `
             <div class="geowe-ui-section">
               <div class="geowe-ui-section-header">
                 <span class="material-icons">${icon}</span>
-                ${title}
+                <span>${title}</span>
               </div>
-              <div class="geowe-ui-section-content">
-                ${content}
-              </div>
+              <div class="geowe-ui-section-content">${content}</div>
             </div>
           `,
-          row: (content) => `
-            <div class="geowe-ui-row">
-              ${content.join('')}
-            </div>
-          `
+
+          row: (content: string[]) => `<div class="geowe-ui-row">${content.join('')}</div>`
         }
       },
-
-
       commands: {
-        register: (id: string, action: (payload?: any) => void) => commands.set(id, action),
+        register: (id: string, action: (payload?: any) => void) => {
+          commands.set(id, action);
+        },
         execute: (id: string, payload?: any) => {
-          if (commands.has(id)) commands.get(id)!(payload);
+          const action = commands.get(id);
+          if (action) {
+            action(payload);
+          } else {
+            // Si el comando no está registrado en el contexto actual, intentamos en el bus global
+            this.eventBus.emit({ type: 'command:execute', payload: { id, payload } });
+          }
         }
       },
       events: {
-        on: (type, handler) => { this.eventBus.on(type, handler); },
-        emit: (type, payload) => { this.eventBus.emit({ type, payload }); }
+        on: (type: string, handler: (payload: any) => void) => {
+          this.eventBus.on(type, handler);
+        },
+        emit: (type: string, payload?: any) => {
+          this.eventBus.emit({ type, payload });
+        }
       },
       plugins: {
-        getActive: () => Array.from(this.activePlugins.values()).map(p => ({
-          id: p.id,
-          name: p.name || p.id,
-          version: (p as any).version
-        })),
+        getActive: () => {
+          return Array.from(this.activePlugins.values()).map(p => ({
+            id: p.id,
+            name: p.name,
+            version: p.version
+          }));
+        }
       },
       resources: {
         getTemplate: (name: string) => {
-          for (let resourceMap of this.pluginResources.values()) {
-            if (resourceMap.has(name)) return resourceMap.get(name);
+          // Primero buscamos el recurso de forma global por nombre
+          for (const pluginStore of this.pluginResources.values()) {
+            if (pluginStore.has(name)) return pluginStore.get(name);
           }
           return undefined;
         }
       },
       app: appInfo
     };
+  }
+
+  public async unloadPlugin(id: string) {
+    const plugin = this.activePlugins.get(id);
+    if (!plugin) return;
+
+    console.log(`Unloading plugin: ${id}`);
+
+    try {
+      if (typeof plugin.deactivate === 'function') {
+        await plugin.deactivate(this.pluginContext);
+      }
+      
+      // Limpieza automática de UI añadida por el plugin
+      this.uiButtons = this.uiButtons.filter(b => (b as any).ownerId !== id);
+      this.uiPanels = this.uiPanels.filter(p => (p as any).ownerId !== id);
+      this.sidebarSections = this.sidebarSections.filter(s => (s as any).ownerId !== id);
+      this.sidebarPanels = this.sidebarPanels.filter(p => (p as any).ownerId !== id);
+      this.layerActions = this.layerActions.filter(a => (a as any).ownerId !== id);
+
+      this.activePlugins.delete(id);
+      this.eventBus.emit({ type: 'plugin:unloaded', payload: id });
+      this.eventBus.emit({ type: 'ui:changed' });
+      this.eventBus.emit({ type: 'ui:panelsChanged' });
+      this.eventBus.emit({ type: 'ui:sidebarChanged' });
+      this.eventBus.emit({ type: 'ui:sidebarPanelsChanged' });
+      this.eventBus.emit({ type: 'ui:layerActionsChanged' });
+      
+      this.pluginContext.ui.setStatus(`Plugin '${plugin.name || id}' desinstalado`);
+    } catch (error) {
+      console.error(`Error deactivating plugin ${id}:`, error);
+    }
   }
 
 
@@ -348,7 +377,10 @@ export class PluginManagerService {
 
     try {
       if (typeof plugin.activate === 'function') {
+        this.currentPluginContextId = plugin.id;
         await plugin.activate(this.pluginContext);
+        this.currentPluginContextId = null;
+        
         this.activePlugins.set(plugin.id, plugin);
         console.log(`Plugin ${plugin.name || plugin.id} activated successfully.`);
         this.eventBus.emit({ type: 'plugin:loaded', payload: plugin.id });

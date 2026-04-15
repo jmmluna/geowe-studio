@@ -21,12 +21,13 @@ import { SplashScreenComponent } from './core/components/splash-screen/splash-sc
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
 import HubManagerPlugin from './plugins/hub-manager.plugin';
+import { PluginContainerDirective } from './core/directives/sidebar-container.directive';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, SplashScreenComponent],
+  imports: [CommonModule, SplashScreenComponent, PluginContainerDirective],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -48,6 +49,10 @@ export class App implements OnInit {
   public appLogo = 'logo-geowe.png';
   public showPluginManagement = true;
   private currentAppManifest: any = null;
+
+  public trackById(index: number, item: any): string {
+    return item.id;
+  }
 
   public map!: Map;
 
@@ -97,17 +102,23 @@ export class App implements OnInit {
         safeContent: this.sanitizer.bypassSecurityTrustHtml(p.content)
       }));
       this.cdr.detectChanges();
-
-      // Forzar re-render de eventos si es el panel activo
-      const activePanel = this.sidebarPanels.find(p => p.id === this.activeSidebarId);
-      if (activePanel && activePanel.onRender) {
-        setTimeout(() => {
-          const el = document.getElementById(`sidebar-dedicated-body-${activePanel.id}`);
-          if (el) activePanel.onRender(el);
-        }, 50);
-      }
     });
 
+    // Escuchar cuando CUALQUIER contenedor de plugin está listo en el DOM (Mediante Directiva Universal)
+    this.eventBus.on('ui:pluginContainerReady', (payload: { id: string, el: HTMLElement }) => {
+      // 1. Buscar en sidebars
+      const sidebar = this.sidebarPanels.find(p => p.id === payload.id);
+      if (sidebar && sidebar.onRender) {
+        sidebar.onRender(payload.el);
+        return;
+      }
+
+      // 2. Buscar en paneles/modales
+      const panel = this.uiPanels.find(p => p.id === payload.id);
+      if (panel && panel.onRender) {
+        panel.onRender(payload.el);
+      }
+    });
     // Escuchar configuraciones de Aplicación (.gapp)
     this.eventBus.on('app:configApplied', (manifest: any) => {
       this.applyAppConfig(manifest);
@@ -130,16 +141,7 @@ export class App implements OnInit {
         safeContent: this.sanitizer.bypassSecurityTrustHtml(p.content)
       }));
       this.cdr.detectChanges();
-
-      // Execute onRender for panels
-      setTimeout(() => {
-        this.uiPanels.forEach(p => {
-          const el = document.getElementById(`panel-body-${p.id}`);
-          if (el && p.onRender) p.onRender(el);
-        });
-      }, 0);
     });
-
     this.eventBus.on('layer:addWMS', (payload: any) => {
       const wmsLayer = new ImageLayer({
         source: new ImageWMS({
@@ -193,6 +195,24 @@ export class App implements OnInit {
       const layerToRemove = layers.find((l: any) => l.get('name') === payload.name);
       if (layerToRemove) {
         this.map.removeLayer(layerToRemove);
+        this.eventBus.emit({ type: 'layer:changed' });
+      }
+    });
+
+    this.eventBus.on('layer:setStyle', (payload: { name: string, style: any }) => {
+      const layers = this.map.getLayers().getArray();
+      const layer = layers.find((l: any) => l.get('name') === payload.name);
+      
+      if (layer && typeof (layer as any).setStyle === 'function') {
+        const s = payload.style;
+        (layer as any).setStyle(new Style({
+          fill: new Fill({ color: s.fill || 'rgba(52, 152, 219, 0.2)' }),
+          stroke: new Stroke({ 
+            color: s.stroke || '#3498db', 
+            width: s.width || 2 
+          }),
+        }));
+        // Notificar cambio para refrescar leyenda en layer-manager
         this.eventBus.emit({ type: 'layer:changed' });
       }
     });
@@ -286,7 +306,7 @@ export class App implements OnInit {
     const section = this.sidebarSections.find(s => s.id === id);
     if (section) {
       section.isOpen = !section.isOpen;
-      
+
       if (section.isOpen && section.onRender) {
         setTimeout(() => {
           const el = document.getElementById(`sidebar-body-${section.id}`);
@@ -305,20 +325,13 @@ export class App implements OnInit {
 
     this.activeSidebarId = id;
     this.isSidebarVisible = true;
-    
+
     // Sincronizar estado visual de los botones de la barra de herramientas (Desacoplado)
     this.uiButtons.forEach(btn => {
-      btn.isActive = (btn.activeOnSidebarId === id) || (btn.id === id); 
+      btn.isActive = (btn.activeOnSidebarId === id) || (btn.id === id);
     });
 
     const panel = this.sidebarPanels.find(p => p.id === id);
-    
-    if (panel && panel.onRender) {
-      setTimeout(() => {
-        const el = document.getElementById(`sidebar-dedicated-body-${panel.id}`);
-        if (el) panel.onRender(el);
-      }, 50);
-    }
     this.eventBus.emit({ type: 'ui:sidebarChanged', payload: { activeId: id, isVisible: this.isSidebarVisible } });
     this.cdr.detectChanges();
   }

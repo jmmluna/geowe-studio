@@ -4,259 +4,216 @@ export default {
   id: 'layer-manager-plugin',
   name: 'Gestor de Capas',
   activate: (ctx: PluginContext) => {
-    const PANEL_ID = 'layer-manager-panel';
+    const SIDEBAR_ID = 'layers';
+    const BUTTON_ID = 'open-layer-manager';
 
     ctx.ui.addStyles(`
-      .layer-item-container {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        padding: 6px 0;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-      }
-      .geowe-ui-dropdown {
-        position: relative;
-        display: inline-block;
-      }
-      .geowe-ui-dropdown-content {
-        display: none;
-        position: absolute;
-        right: 0;
-        top: 100%;
-        background-color: white;
-        min-width: 140px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
-        z-index: 2000;
-        border-radius: 8px;
-        border: 1px solid #dcdde1;
-        padding: 4px 0;
-      }
-      .geowe-ui-dropdown.active .geowe-ui-dropdown-content {
-        display: block;
-      }
-      .geowe-ui-dropdown-item {
-        width: 100%;
-        padding: 8px 12px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: none;
-        background: none;
-        text-align: left;
-        cursor: pointer;
-        font-size: 13px;
-        color: #2c3e50;
-        transition: background 0.2s;
-      }
-      .geowe-ui-dropdown-item:hover {
-        background-color: #f8f9fa;
-        color: #3498db;
-      }
+      .layer-manager-container { display: flex; flex-direction: column; background: #fff; height: 100%; font-family: 'Inter', sans-serif; }
+      .layer-manager-header { padding: 16px; border-bottom: 1px solid #edf2f7; background: #fafbfc; }
+      .layer-manager-title { font-size: 16px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+      .layer-manager-subtitle { font-size: 12px; color: #718096; }
+      
+      .layer-list { flex: 1; overflow-y: auto; padding: 8px; }
+      .layer-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 8px; transition: all 0.2s; overflow: hidden; }
+      .layer-item:hover { border-color: #cbd5e0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+      .layer-item.active { border-color: #3182ce; box-shadow: 0 4px 12px rgba(49, 130, 206, 0.1); }
+      
+      .layer-item-main { display: flex; align-items: center; padding: 12px; gap: 10px; cursor: pointer; }
+      .layer-item-visibility { width: 18px; height: 18px; cursor: pointer; accent-color: #3182ce; }
+      .layer-item-info { flex: 1; min-width: 0; }
+      .layer-item-name { font-size: 13px; font-weight: 600; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .layer-item-type { font-size: 11px; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; }
+      
+      .layer-item-legend { width: 8px; height: 24px; border-radius: 4px; flex-shrink: 0; }
+      
+      .layer-item-actions-toggle { color: #718096; transition: transform 0.2s; }
+      .layer-item.expanded .layer-item-actions-toggle { transform: rotate(180deg); color: #3182ce; }
+      
+      .layer-actions-panel { background: #f8fafc; border-top: 1px solid #edf2f7; display: none; padding: 8px; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .layer-item.expanded .layer-actions-panel { display: grid; }
+      
+      .layer-action-btn { display: flex; align-items: center; gap: 8px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; font-weight: 600; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+      .layer-action-btn:hover { background: #edf2f7; color: #3182ce; border-color: #bee3f8; }
+      .layer-action-btn .material-icons { font-size: 16px; }
+      .layer-action-btn.danger:hover { color: #e53e3e; border-color: #fed7d7; background: #fff5f5; }
+      
+      .layer-manager-empty { text-align: center; padding: 40px 20px; color: #a0aec0; }
+      .layer-manager-empty .material-icons { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.3; }
     `);
 
+    let expandedLayerName: string | null = null;
 
-    const getPanelContent = () => {
+    const getSidebarContent = () => {
       const layers = ctx.layers.getAll();
-      
       if (layers.length === 0) {
         return `
-          <div class="layer-manager-empty">
-            <p>No hay capas cargadas en el mapa.</p>
-            <p class="small">Use el catálogo para añadir capas.</p>
+          <div class="layer-manager-container">
+            <div class="layer-manager-header">
+                <div class="layer-manager-title">Capas</div>
+                <div class="layer-manager-subtitle">No hay capas cargadas</div>
+            </div>
+            <div class="layer-manager-empty">
+                <span class="material-icons">layers_clear</span>
+                <p>El mapa está vacío.</p>
+                <p style="font-size:12px">Añada capas desde el catálogo o el marketplace.</p>
+            </div>
           </div>
         `;
       }
 
       const layerItems = layers.map(layer => {
-        const legend = layer.type === 'vector' 
-          ? `<div style="width: 12px; height: 12px; border-radius: 3px; background-color: ${layer.color || '#3498db'}; margin-right: 8px; flex-shrink: 0;"></div>`
-          : '';
+        const isExpanded = expandedLayerName === layer.name;
+        const legendColor = layer.color || (layer.type === 'vector' ? '#3182ce' : '#48bb78');
         
-        const dynamicActions = ctx.ui.getLayerActions().map(action => `
-          <button class="geowe-ui-dropdown-item dynamic-layer-action" data-name="${layer.name}" data-action-id="${action.id}" style="width: 100%; text-align: left; padding: 8px 12px; border: none; background: none; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-            <span class="material-icons" style="font-size: 18px;">${action.icon || 'extension'}</span>
-            ${action.label}
-          </button>
+        const dynamicActions = ctx.ui.getLayerActions().filter(action => {
+            const supported = action.supportedLayerTypes || ['vector'];
+            return supported.includes(layer.type);
+        }).map(action => `
+            <button class="layer-action-btn dynamic-layer-action" data-name="${layer.name}" data-action-id="${action.id}">
+                <span class="material-icons">${action.icon || 'extension'}</span>
+                <span>${action.label}</span>
+            </button>
         `).join('');
 
-        const dropdown = `
-          <div class="geowe-ui-dropdown" style="position: relative;">
-            <button class="dropdown-trigger geowe-ui-btn-icon" style="padding: 4px;">
-              <span class="material-icons">more_vert</span>
+        const zoomButton = layer.type === 'vector' ? `
+            <button class="layer-action-btn layer-zoom-btn" data-name="${layer.name}">
+                <span class="material-icons">my_location</span>
+                <span>Zoom</span>
             </button>
-            <div class="geowe-ui-dropdown-content" style="position: absolute; right: 0; top: 100%; background: white; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; border-radius: 4px; padding: 4px 0; min-width: 140px; display: none;">
-              ${layer.type === 'vector' ? `
-                <button class="geowe-ui-dropdown-item layer-zoom-btn" data-name="${layer.name}" style="width: 100%; text-align: left; padding: 8px 12px; border: none; background: none; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                  <span class="material-icons" style="font-size: 18px;">zoom_in</span>
-                  Zoom a la capa
-                </button>
-                ${dynamicActions}
-              ` : ''}
-              <button class="geowe-ui-dropdown-item layer-remove-btn" data-name="${layer.name}" style="width: 100%; text-align: left; padding: 8px 12px; border: none; background: none; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; color: #e74c3c;">
-                <span class="material-icons" style="font-size: 18px;">delete_outline</span>
-                Eliminar capa
-              </button>
-            </div>
-          </div>
-        `;
-
+        ` : '';
 
         return `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 4px; border-bottom: 1px solid #f0f0f0; width: 100%; height: 40px; box-sizing: border-box; overflow: visible;">
-            <div style="display: flex; align-items: center; flex: 1; min-width: 0; overflow: hidden;">
-              <input type="checkbox" ${layer.visible ? 'checked' : ''} data-name="${layer.name}" style="margin-right: 10px; cursor: pointer; flex-shrink: 0; width: 16px; height: 16px;">
-              <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #2c3e50;">${layer.name}</span>
+            <div class="layer-item ${isExpanded ? 'expanded active' : ''}" data-name="${layer.name}">
+                <div class="layer-item-main">
+                    <input type="checkbox" class="layer-item-visibility" ${layer.visible ? 'checked' : ''} data-name="${layer.name}">
+                    <div class="layer-item-legend" style="background: ${legendColor}"></div>
+                    <div class="layer-item-info">
+                        <div class="layer-item-name">${layer.name}</div>
+                        <div class="layer-item-type">${layer.type} layer</div>
+                    </div>
+                    <span class="material-icons layer-item-actions-toggle">expand_more</span>
+                </div>
+                <div class="layer-actions-panel">
+                    ${zoomButton}
+                    ${dynamicActions}
+                    <button class="layer-action-btn danger layer-remove-btn" data-name="${layer.name}">
+                        <span class="material-icons">delete_outline</span>
+                        <span>Eliminar</span>
+                    </button>
+                </div>
             </div>
-            <div style="display: flex; align-items: center; flex-shrink: 0;">
-              ${legend}
-              ${dropdown}
-            </div>
-          </div>
         `;
       }).join('');
 
-
-
       return `
-        <div class="layer-manager-scroll-container" style="max-height: 280px; overflow-y: auto; overflow-x: visible; padding-bottom: 60px;">
-          <div class="layer-manager-list">${layerItems}</div>
+        <div class="layer-manager-container">
+            <div class="layer-manager-header">
+                <div class="layer-manager-title">Capas</div>
+                <div class="layer-manager-subtitle">${layers.length} capas registradas</div>
+            </div>
+            <div class="layer-list">${layerItems}</div>
         </div>
       `;
     };
 
+    const setupEvents = (container: HTMLElement) => {
+      container.onclick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        
+        // 1. Toggle visibilidad (checkbox)
+        if (target.classList.contains('layer-item-visibility')) {
+           const chk = target as HTMLInputElement;
+           ctx.layers.setVisible(chk.getAttribute('data-name')!, chk.checked);
+           refresh();
+           return;
+        }
 
-
-
-    const updateUI = (el: HTMLElement) => {
-      el.innerHTML = getPanelContent();
-      
-      // Listeners de Visibilidad (Checkbox)
-      el.querySelectorAll('input[type="checkbox"]').forEach((chk: any) => {
-        chk.addEventListener('change', (e: any) => {
-          ctx.layers.setVisible(chk.getAttribute('data-name'), e.target.checked);
-        });
-      });
-
-      // Lógica de apertura de Dropdown
-      el.querySelectorAll('.dropdown-trigger').forEach((btn: any) => {
-        btn.addEventListener('click', (e: any) => {
-          e.stopPropagation();
-          const dropdown = (btn as HTMLElement).parentElement;
-          const content = dropdown?.querySelector('.geowe-ui-dropdown-content') as HTMLElement;
-          
-          // Cerrar otros
-          el.querySelectorAll('.geowe-ui-dropdown-content').forEach((d: any) => {
-            if (d !== content) d.style.display = 'none';
-          });
-
-          // Toggle actual
-          if (content) {
-            content.style.display = content.style.display === 'block' ? 'none' : 'block';
-          }
-        });
-      });
-
-      // Cerrar menús al hacer clic fuera (en el panel)
-      el.addEventListener('click', () => {
-        el.querySelectorAll('.geowe-ui-dropdown-content').forEach((d: any) => {
-          (d as HTMLElement).style.display = 'none';
-        });
-      });
-
-      // Acciones de Zoom
-      el.querySelectorAll('.layer-zoom-btn').forEach((btn: any) => {
-        btn.addEventListener('click', (e: any) => {
-          e.stopPropagation();
-          ctx.layers.zoomToLayer(btn.getAttribute('data-name'));
-          // Cerrar menú
-          (btn.parentElement as HTMLElement).style.display = 'none';
-        });
-      });
-
-      // Acciones dinámicas de otros plugins
-      el.querySelectorAll('.dynamic-layer-action').forEach((btn: any) => {
-        btn.addEventListener('click', (e: any) => {
-          e.stopPropagation();
-          const actionId = btn.getAttribute('data-action-id');
-          const layerName = btn.getAttribute('data-name');
-          const action = ctx.ui.getLayerActions().find(a => a.id === actionId);
-          if (action) action.callback(layerName);
-          // Cerrar menú
-          (btn.parentElement as HTMLElement).style.display = 'none';
-        });
-      });
-
-
-      // Acciones de Borrar
-      el.querySelectorAll('.layer-remove-btn').forEach((btn: any) => {
-        btn.addEventListener('click', (e: any) => {
-          e.stopPropagation();
-          const name = btn.getAttribute('data-name');
-          if (confirm(`¿Eliminar la capa "${name}"?`)) {
-            ctx.layers.removeLayer(name);
+        // 2. Expandir/contraer
+        const main = target.closest('.layer-item-main') as HTMLElement;
+        if (main && !target.classList.contains('layer-item-visibility')) {
+            const name = main.parentElement?.getAttribute('data-name') || null;
+            expandedLayerName = expandedLayerName === name ? null : name;
             refresh();
-          }
-        });
-      });
+            return;
+        }
+
+        // 3. Acciones dinámicas
+        const dynamicBtn = target.closest('.dynamic-layer-action') as HTMLElement;
+        if (dynamicBtn) {
+            e.stopPropagation();
+            const actionId = dynamicBtn.getAttribute('data-action-id');
+            const layerName = dynamicBtn.getAttribute('data-name');
+            
+            const action = ctx.ui.getLayerActions().find(a => 
+              a.id?.toLowerCase() === actionId?.toLowerCase() ||
+              a.label?.toLowerCase().replace(/\s+/g, '-') === actionId?.toLowerCase()
+            );
+            
+            if (action) {
+                action.callback(layerName!);
+            }
+            return;
+        }
+
+        // 4. Zoom
+        const zoomBtn = target.closest('.layer-zoom-btn') as HTMLElement;
+        if (zoomBtn) {
+            e.stopPropagation();
+            ctx.layers.zoomToLayer(zoomBtn.getAttribute('data-name')!);
+            return;
+        }
+
+        // 5. Eliminar
+        const removeBtn = target.closest('.layer-remove-btn') as HTMLElement;
+        if (removeBtn) {
+            e.stopPropagation();
+            const name = removeBtn.getAttribute('data-name');
+            if (confirm(`¿Eliminar la capa "${name}"?`)) {
+              ctx.layers.removeLayer(name!);
+              refresh();
+            }
+            return;
+        }
+      };
     };
-
-
-
-
-    let isOpen = false;
-    const BUTTON_ID = 'open-layer-manager';
-
-    const toggleManager = () => {
-      if (isOpen) {
-        ctx.ui.removePanel(PANEL_ID);
-        ctx.ui.setButtonActive(BUTTON_ID, false);
-        isOpen = false;
-      } else {
-        ctx.ui.addPanel({
-          id: PANEL_ID,
-          title: 'Gestión de Capas',
-          content: getPanelContent(),
-          onRender: (el) => updateUI(el)
-        });
-        ctx.ui.setButtonActive(BUTTON_ID, true);
-        isOpen = true;
-      }
-    };
-
-
 
     const refresh = () => {
-      if (isOpen) ctx.ui.updatePanel(PANEL_ID);
+      ctx.ui.registerSidebar({
+        id: SIDEBAR_ID,
+        title: 'Gestor de Capas',
+        icon: 'layers',
+        content: getSidebarContent(),
+        onRender: setupEvents
+      });
     };
 
-    // Listen for manual panel closure (the "X")
-    ctx.events.on('ui:panelClosed', (id: string) => {
-      if (id === PANEL_ID) {
-        isOpen = false;
-        ctx.ui.setButtonActive(BUTTON_ID, false);
-      }
-    });
+    const toggleManager = () => {
+      refresh();
+      setTimeout(() => {
+        ctx.commands.execute('ui:activePluginSidebar', SIDEBAR_ID);
+        ctx.commands.execute('ui:openSidebar');
+      }, 50);
+    };
 
-    // Listen for layer changes to refresh panel if open
     ctx.events.on('layer:changed', () => refresh());
-    ctx.events.on('layer:addWMS', () => setTimeout(() => refresh(), 500));
-    ctx.events.on('layer:addVector', () => setTimeout(() => refresh(), 500));
-    
+    ctx.events.on('layer:addWMS', () => setTimeout(() => refresh(), 100));
+    ctx.events.on('layer:addVector', () => setTimeout(() => refresh(), 100));
+    ctx.events.on('ui:layerActionsChanged', () => refresh());
 
-    // Registrar comando como toggle
     ctx.commands.register('layer-manager:toggle', toggleManager);
 
-
-    // UI Button
     ctx.ui.addButton({
-      id: 'open-layer-manager',
+      id: BUTTON_ID,
       label: 'Gestionar Capas',
       icon: 'layers',
-      commandId: 'layer-manager:toggle'
+      commandId: 'layer-manager:toggle',
+      activeOnSidebarId: SIDEBAR_ID
     });
 
+    refresh();
   },
-  deactivate: () => {}
+  deactivate: (ctx: PluginContext) => {
+    ctx.ui.removeSidebar('layers');
+    ctx.ui.removeButton('open-layer-manager');
+  }
 };

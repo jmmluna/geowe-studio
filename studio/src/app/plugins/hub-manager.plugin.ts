@@ -42,9 +42,13 @@ export default {
             .hub-btn-sm { padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
             .hub-btn-install { background: #3182ce; color: #fff; }
             .hub-btn-install:hover { background: #2b6cb0; }
+            .hub-btn-uninstall { background: #fff; border: 1px solid #fed7d7; color: #e53e3e; }
+            .hub-btn-uninstall:hover { background: #fff5f5; border-color: #fc8181; }
             .hub-btn-outline { background: #fff; border: 1px solid #e2e8f0; color: #718096; }
             .hub-empty { text-align: center; padding: 60px 20px; color: #a0aec0; }
             .hub-empty .material-icons { font-size: 48px; display: block; margin-bottom: 15px; opacity: 0.5; }
+            .hub-native-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: #2d3748; color: #fff; margin-left: 8px; vertical-align: middle; }
+            .hub-counter { display: inline-flex; align-items: center; justify-content: center; background: #ebf8ff; color: #3182ce; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: 6px; }
         `;
 
         const TEMPLATE = `
@@ -55,7 +59,7 @@ export default {
                         <input type="text" id="hub-search" class="hub-search-input" placeholder="Buscar plugins..." value="{{searchQuery}}">
                     </div>
                     <div class="hub-tabs">
-                        <div class="hub-tab {{exploreActive}}" data-tab="explore">Marketplace</div>
+                        <div class="hub-tab {{exploreActive}}" data-tab="explore">Marketplace {{counter}}</div>
                         <div class="hub-tab {{activeActive}}" data-tab="active">Instalados</div>
                     </div>
                 </div>
@@ -114,17 +118,28 @@ export default {
             const active = ctx.plugins.getActive();
             if (active.length === 0) return '<div class="hub-empty"><span class="material-icons">extension_off</span><p>No hay plugins activos</p></div>';
 
+            const PROTECTED_PLUGINS = ['hub-manager-plugin', 'layer-manager-plugin', 'layer-catalog-plugin'];
+
             return `
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    ${active.map(p => `
+                    ${active.map(p => {
+                        const isProtected = PROTECTED_PLUGINS.includes(p.id);
+                        return `
                         <div style="background:#fff; border:1px solid #e2e8f0; padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center">
                             <div>
-                                <div style="font-weight:700; font-size:14px; color:#2d3748">${p.name}</div>
+                                <div style="font-weight:700; font-size:14px; color:#2d3748">
+                                    ${p.name}
+                                    ${isProtected ? '<span class="hub-native-badge">NATIVO</span>' : ''}
+                                </div>
                                 <div style="font-size:11px; color:#a0aec0">${p.id}</div>
                             </div>
-                            <span class="material-icons" style="color:#48bb78; font-size:20px">check_circle</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${isProtected 
+                                    ? '<span class="material-icons" style="color:#48bb78; font-size:20px">verified_user</span>' 
+                                    : `<button class="hub-btn-sm hub-btn-uninstall" data-uninstall-id="${p.id}"><span class="material-icons" style="font-size:16px">delete_outline</span>Desinstalar</button>`}
+                            </div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             `;
         };
@@ -148,6 +163,7 @@ export default {
                 .replace('{{searchQuery}}', searchQuery)
                 .replace('{{exploreActive}}', currentTab === 'explore' ? 'active' : '')
                 .replace('{{activeActive}}', currentTab === 'active' ? 'active' : '')
+                .replace('{{counter}}', `<span class="hub-counter">${catalog.length}</span>`)
                 .replace('{{content}}', content);
         };
 
@@ -216,6 +232,15 @@ export default {
                     if (url) window.open(url, '_blank');
                     return;
                 }
+
+                if (btn.classList.contains('hub-btn-uninstall')) {
+                    const id = btn.getAttribute('data-uninstall-id');
+                    if (id && (window as any).pluginManager) {
+                        ctx.ui.setStatus(`Desinstalando ${id}...`);
+                        await (window as any).pluginManager.unloadPlugin(id);
+                        // El refresco vendrá por el evento plugin:unloaded que hemos configurado al final
+                    }
+                }
             };
 
             const search = el.querySelector('#hub-search') as HTMLInputElement;
@@ -267,6 +292,7 @@ export default {
         // Volvemos a escuchar la carga de plugins para refrescar el estado 'Activo'
         // Pero ahora con persistencia de scroll para que no sea brusco.
         ctx.events.on('plugin:loaded', () => refreshUI());
+        ctx.events.on('plugin:unloaded', () => refreshUI());
     },
     deactivate: () => {}
 };
