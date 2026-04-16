@@ -6,6 +6,8 @@ export interface PluginContext {
   events: EventBusAPI;
   plugins: {
     getActive: () => { id: string, name: string, version?: string }[];
+    loadRemote: (url: string) => Promise<void>;
+    unload: (id: string) => Promise<void>;
   };
   resources: {
     getTemplate: (name: string) => string | undefined;
@@ -14,6 +16,8 @@ export interface PluginContext {
     title: string;
     logo: string;
   };
+  /** Acceso seguro al SDK de OpenLayers */
+  ol: any;
 }
 
 

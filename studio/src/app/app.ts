@@ -66,11 +66,7 @@ export class App implements OnInit {
 
   async ngOnInit() {
     this.initMap();
-    (window as any).ol = {
-      style: { Style, Fill, Stroke }
-    };
     this.pluginManager.initContext(this.map, { title: this.appTitle, logo: this.appLogo });
-    (window as any).pluginManager = this.pluginManager;
 
     // Registro de comandos Core de UI para plugins
     const ctx = this.pluginManager.pluginContext;

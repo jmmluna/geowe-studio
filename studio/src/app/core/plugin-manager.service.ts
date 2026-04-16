@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { GeoWEPlugin, PluginContext } from './plugin-context';
 import { EventBusService } from './event-bus.service';
 import JSZip from 'jszip';
-import { toArray } from 'ol/DataTile';
+import { MapSDK } from './ol-sdk';
 
 
 
@@ -50,6 +50,7 @@ export class PluginManagerService {
 
     this.pluginContext = {
       map: this.olMap,
+      ol: MapSDK,
       layers: {
         addWMSLayer: (name: string, url: string, params: any) => {
           this.eventBus.emit({ type: 'layer:addWMS', payload: { name, url, params } });
@@ -267,9 +268,11 @@ export class PluginManagerService {
           return Array.from(this.activePlugins.values()).map(p => ({
             id: p.id,
             name: p.name,
-            version: p.version
+            version: (p as any).version
           }));
-        }
+        },
+        loadRemote: (url: string) => this.loadRemotePlugin(url),
+        unload: (id: string) => this.unloadPlugin(id)
       },
       resources: {
         getTemplate: (name: string) => {

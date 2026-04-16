@@ -213,13 +213,11 @@ export default {
                         btn.innerHTML = '<span class="material-icons" style="font-size:16px">hourglass_empty</span>';
                         
                         try {
-                            if ((window as any).pluginManager) {
-                                await (window as any).pluginManager.loadRemotePlugin(pluginData.downloadUrl);
-                                // No llamamos a refreshUI aquí, confiaremos en el evento plugin:loaded
-                                ctx.ui.setStatus(`Instalando ${pluginData.name}...`);
-                            }
+                            await ctx.plugins.loadRemote(pluginData.downloadUrl);
+                            // No llamamos a refreshUI aquí, confiaremos en el evento plugin:loaded
+                            ctx.ui.setStatus(`Instalando ${pluginData.name}...`);
                         } catch (err) {
-                            console.error('Error:', err);
+                           console.error('Error:', err);
                             btn.innerHTML = '<span class="material-icons" style="font-size:16px">error</span>';
                             (btn as any).disabled = false;
                         }
@@ -235,9 +233,9 @@ export default {
 
                 if (btn.classList.contains('hub-btn-uninstall')) {
                     const id = btn.getAttribute('data-uninstall-id');
-                    if (id && (window as any).pluginManager) {
+                    if (id) {
                         ctx.ui.setStatus(`Desinstalando ${id}...`);
-                        await (window as any).pluginManager.unloadPlugin(id);
+                        await ctx.plugins.unload(id);
                         // El refresco vendrá por el evento plugin:unloaded que hemos configurado al final
                     }
                 }
