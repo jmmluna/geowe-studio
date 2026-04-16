@@ -113,7 +113,7 @@ export class PluginManagerService {
           this.eventBus.emit({ type: 'ui:changed' });
         },
 
-        addPanel: (options) => {
+        addPanel: (options: { id: string, title: string, content?: string, component?: any, inputs?: any, isModal?: boolean, onRender?: (el: HTMLElement) => void }) => {
           // Si ya existe un panel con ese ID, lo reemplazamos para actualizar contenido
           const index = this.uiPanels.findIndex(p => p.id === options.id);
           if (index !== -1) {
@@ -124,7 +124,7 @@ export class PluginManagerService {
           this.eventBus.emit({ type: 'ui:panelsChanged' });
         },
 
-        addModal: (options) => {
+        addModal: (options: { id: string, title: string, content?: string, component?: any, inputs?: any, onRender?: (el: HTMLElement) => void }) => {
           this.pluginContext.ui.addPanel({ ...options, isModal: true });
         },
 

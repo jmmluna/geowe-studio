@@ -1,0 +1,54 @@
+<div class="projection-selector-container">
+  <div class="selector-header">
+    <span class="material-icons header-icon">map</span>
+    <div class="header-text">
+        <h3>PROYECCIÓN (EPSG)</h3>
+        <p class="filename-hint">Archivo: {{ filename }}</p>
+    </div>
+  </div>
+
+  <div class="search-wrapper">
+    <div class="search-input-container">
+        <span class="material-icons search-icon">search</span>
+        <input 
+            type="text" 
+            [(ngModel)]="searchText" 
+            (input)="filterOptions()" 
+            placeholder="Buscar EPSG..."
+            class="projection-search-input"
+        >
+    </div>
+  </div>
+
+  <div class="projection-list-outer">
+    <div class="projection-list">
+        @for (opt of filteredOptions; track opt.code) {
+            <div 
+                class="projection-item" 
+                [class.recommended]="opt.code === recommendedCode"
+                (click)="select(opt.code)"
+            >
+                <div class="item-main">
+                    <span class="item-code">{{ opt.code }}</span>
+                    <span class="item-separator">-</span>
+                    <span class="item-name">{{ opt.name }}</span>
+                </div>
+                <div class="item-desc">{{ opt.desc }}</div>
+                <div class="item-footer">
+                    <span class="type-tag" [class.tag-geo]="opt.type === 'geographic'" [class.tag-proj]="opt.type === 'projected'">
+                        {{ opt.type === 'geographic' ? 'Geográficas' : 'Proyectado' }}
+                    </span>
+                    @if (opt.code === recommendedCode) {
+                        <span class="recommended-tag">Sugerido</span>
+                    }
+                </div>
+            </div>
+        }
+        @if (filteredOptions.length === 0) {
+            <div class="no-results">
+                No se encontraron sistemas para "{{ searchText }}"
+            </div>
+        }
+    </div>
+  </div>
+</div>

@@ -9,25 +9,31 @@ import VectorLayer from 'ol/layer/Vector';
 import ImageWMS from 'ol/source/ImageWMS';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
+import KML from 'ol/format/KML';
+import GPX from 'ol/format/GPX';
+import WKT from 'ol/format/WKT';
 import OSM from 'ol/source/OSM';
 import { fromLonLat } from 'ol/proj';
+import { ProjectionRegistry } from './core/projection-registry';
 import { Style, Fill, Stroke } from 'ol/style';
 import { ScaleLine } from 'ol/control';
 import { PluginManagerService } from './core/plugin-manager.service';
 
 import { EventBusService, GeoEvent } from './core/event-bus.service';
 import { SplashScreenComponent } from './core/components/splash-screen/splash-screen.component';
+import { ProjectionSelectorComponent } from './core/components/projection-selector/projection-selector.component';
 
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
 import HubManagerPlugin from './plugins/hub-manager.plugin';
 import { PluginContainerDirective } from './core/directives/sidebar-container.directive';
+import { FileDropDirective } from './core/directives/file-drop.directive';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, SplashScreenComponent, PluginContainerDirective],
+  imports: [CommonModule, SplashScreenComponent, PluginContainerDirective, FileDropDirective],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -65,6 +71,9 @@ export class App implements OnInit {
   ) { }
 
   async ngOnInit() {
+    // Inicializar el registro de proyecciones (UTM, etc.)
+    ProjectionRegistry.registerAll();
+
     this.initMap();
     this.pluginManager.initContext(this.map, { title: this.appTitle, logo: this.appLogo });
 
@@ -342,6 +351,131 @@ export class App implements OnInit {
   public async loadRemote(urlInput: string) {
     if (!urlInput) return;
     await this.pluginManager.loadRemotePlugin(urlInput);
+  }
+
+  private async processSpatialFile(file: File) {
+    const reader = new FileReader();
+
+    reader.onload = async (e: any) => {
+      const text = e.target.result;
+      const fileName = file.name.toLowerCase();
+      let features: any[] = [];
+      let format: any = null;
+
+      try {
+        if (fileName.endsWith('.kml')) {
+          format = new KML();
+        } else if (fileName.endsWith('.gpx')) {
+          format = new GPX();
+        } else if (fileName.endsWith('.wkt')) {
+          format = new WKT();
+        } else {
+          format = new GeoJSON();
+        }
+
+        const detection = ProjectionRegistry.detectProjection(text, file.name);
+        let sourceProjection = detection.code;
+
+        // Si no estamos seguros de la proyección, preguntamos al usuario
+        if (!detection.isConfident) {
+          sourceProjection = await this.showProjectionSelector(file.name, detection);
+        }
+
+        features = format.readFeatures(text, {
+          dataProjection: sourceProjection,
+          featureProjection: this.map.getView().getProjection()
+        });
+
+        if (features && features.length > 0) {
+          const vectorSource = new VectorSource({
+            features: features
+          });
+
+          const name = file.name.replace(/\.[^/.]+$/, ""); // Quitar extensión
+
+          const vectorLayer = new VectorLayer({
+            source: vectorSource,
+            properties: {
+              name: name,
+              type: 'vector',
+              color: '#3498db'
+            },
+            style: new Style({
+              fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),
+              stroke: new Stroke({ color: '#3498db', width: 2 }),
+            })
+          });
+
+          this.map.addLayer(vectorLayer);
+          this.eventBus.emit({ type: 'layer:changed' });
+
+          // Auto zoom to layer extent
+          const extent = vectorSource.getExtent();
+          if (extent) {
+            this.map.getView().fit(extent, {
+              padding: [50, 50, 50, 50],
+              duration: 1000
+            });
+          }
+
+          this.pluginManager.pluginContext.ui.setStatus(`Capa cargada: ${name} (${features.length} elementos) en ${sourceProjection}`);
+        } else {
+          this.pluginManager.pluginContext.ui.setStatus(`Error: No se encontraron datos válidos en ${file.name}`);
+        }
+
+      } catch (err: any) {
+        console.error('Error al procesar archivo GIS:', err);
+        this.pluginManager.pluginContext.ui.setStatus(`Error al leer archivo: ${err.message}`);
+      }
+    };
+
+    reader.readAsText(file);
+  }
+
+  private showProjectionSelector(filename: string, detection: any): Promise<string> {
+    return new Promise((resolve) => {
+      const modalId = 'projection-selector-' + Date.now();
+      
+      this.pluginManager.pluginContext.ui.addModal({
+        id: modalId,
+        title: `PROYECCIÓN (EPSG)`,
+        component: ProjectionSelectorComponent,
+        inputs: {
+          filename: filename,
+          recommendedCode: detection.code,
+          probableType: detection.probableType
+        }
+      });
+
+      // Escuchamos la selección a través del EventBus (desacoplado)
+      const sub = this.eventBus.on('ui:projectionSelected', (code: string) => {
+        this.pluginManager.pluginContext.ui.removePanel(modalId);
+        resolve(code);
+      });
+    });
+  }
+
+  public onFileDropped(files: FileList) {
+    if (files && files.length > 0) {
+      const STUDIO_EXTS = ['.gplugin', '.gext', '.gapp', '.zip'];
+      const GIS_EXTS = ['.geojson', '.json', '.kml', '.gpx', '.wkt'];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files.item(i);
+        if (!file) continue;
+
+        const fileName = file.name.toLowerCase();
+        
+        if (STUDIO_EXTS.some(ext => fileName.endsWith(ext))) {
+          this.pluginManager.loadLocalPlugin(file);
+        } else if (GIS_EXTS.some(ext => fileName.endsWith(ext))) {
+          this.processSpatialFile(file);
+        } else {
+          this.statusMessage = `Error: El archivo "${file.name}" no es un formato válido para GeoWE Studio.`;
+          this.pluginManager.pluginContext.ui.setStatus(this.statusMessage);
+        }
+      }
+    }
   }
 
   public onFileSelected(event: any) {

@@ -8,7 +8,71 @@
   width: 100vw;
   overflow: hidden;
   transition: all 0.3s ease;
+  border: 4px solid transparent;
+  box-sizing: border-box;
 }
+
+.app-layout.file-over {
+  border: 4px solid #3498db;
+  box-shadow: inset 0 0 50px rgba(52, 152, 219, 0.1);
+  background-color: rgba(52, 152, 219, 0.02);
+}
+
+/* Projection Selector Modal */
+.projection-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.projection-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border-radius: 8px;
+  border: 2px solid #eee;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.projection-btn:hover {
+  border-color: #3498db;
+  background: #f7fbff;
+  transform: translateY(-2px);
+}
+
+.projection-btn.recommended {
+  border-color: #e67e22 !important;
+  background: #fffef2;
+}
+
+.projection-btn .epsg-code {
+  font-weight: bold;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.projection-btn .epsg-desc {
+  font-size: 11px;
+  color: #7f8c8d;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.proj-type-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 8px;
+  color: white;
+}
+
+.tag-geo { background: #27ae60; }
+.tag-proj { background: #2980b9; }
 
 .app-layout.sidebar-collapsed {
   grid-template-columns: 68px 1fr;

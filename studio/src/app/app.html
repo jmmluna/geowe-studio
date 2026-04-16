@@ -1,5 +1,5 @@
 <app-splash-screen></app-splash-screen>
-<div class="app-layout" [class.sidebar-collapsed]="!isSidebarVisible">
+<div class="app-layout" [class.sidebar-collapsed]="!isSidebarVisible" appFileDrop (fileDropped)="onFileDropped($event)">
 
   <!-- Nueva Barra de Herramientas de Plugins (Iconos) -->
   <div class="plugin-toolbar">
@@ -127,7 +127,10 @@
             </div>
             <button (click)="closePanel(panel.id)">×</button>
           </div>
-          <div class="panel-content" [innerHTML]="panel.safeContent" [id]="'panel-body-' + panel.id" [pluginContainer]="panel.id"></div>
+          <div class="panel-content" [id]="'panel-body-' + panel.id" [pluginContainer]="panel.id">
+            <ng-container *ngComponentOutlet="panel.component; inputs: panel.inputs"></ng-container>
+            <div *ngIf="!panel.component" [innerHTML]="panel.safeContent"></div>
+          </div>
         </div>
       </div>
     </div>
