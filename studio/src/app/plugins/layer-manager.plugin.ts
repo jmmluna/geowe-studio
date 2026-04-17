@@ -37,6 +37,16 @@ export default {
       .layer-action-btn .material-icons { font-size: 16px; }
       .layer-action-btn.danger:hover { color: #e53e3e; border-color: #fed7d7; background: #fff5f5; }
       
+      .layer-info-card { background: #fdfdfe; border-top: 1px solid #edf2f7; display: none; padding: 12px; }
+      .layer-item.expanded .layer-info-card { display: block; }
+      .layer-info-header { font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .info-item { display: flex; align-items: flex-start; gap: 6px; }
+      .info-item .material-icons { font-size: 14px; color: #a0aec0; margin-top: 1px; }
+      .info-item-content { flex: 1; min-width: 0; }
+      .info-item-label { font-size: 10px; color: #718096; margin-bottom: 2px; }
+      .info-item-value { font-size: 11px; font-weight: 600; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
       .layer-manager-empty { text-align: center; padding: 40px 20px; color: #a0aec0; }
       .layer-manager-empty .material-icons { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.3; }
     `);
@@ -82,6 +92,50 @@ export default {
             </button>
         ` : '';
 
+        // Construcción de la tarjeta de metadatos PRO
+        let metadataHtml = '';
+        if (layer.metadata) {
+          metadataHtml = `
+            <div class="layer-info-card">
+                <div class="layer-info-header">Información Técnica</div>
+                <div class="info-grid">
+                    ${layer.metadata.srs ? `
+                    <div class="info-item">
+                        <span class="material-icons">share_location</span>
+                        <div class="info-item-content">
+                            <div class="info-item-label">Proyección (SRC)</div>
+                            <div class="info-item-value" title="${layer.metadata.srs}">${layer.metadata.srs}</div>
+                        </div>
+                    </div>` : ''}
+                    ${layer.metadata.format ? `
+                    <div class="info-item">
+                        <span class="material-icons">description</span>
+                        <div class="info-item-content">
+                            <div class="info-item-label">Formato</div>
+                            <div class="info-item-value" title="${layer.metadata.format}">${layer.metadata.format}</div>
+                        </div>
+                    </div>` : ''}
+                    ${layer.metadata.count !== undefined ? `
+                    <div class="info-item">
+                        <span class="material-icons">data_object</span>
+                        <div class="info-item-content">
+                            <div class="info-item-label">Entidades</div>
+                            <div class="info-item-value">${layer.metadata.count} features</div>
+                        </div>
+                    </div>` : ''}
+                    ${layer.metadata.filename ? `
+                    <div class="info-item" style="grid-column: span 2;">
+                        <span class="material-icons">folder</span>
+                        <div class="info-item-content">
+                            <div class="info-item-label">Archivo de origen</div>
+                            <div class="info-item-value" title="${layer.metadata.filename}">${layer.metadata.filename}</div>
+                        </div>
+                    </div>` : ''}
+                </div>
+            </div>
+          `;
+        }
+
         return `
             <div class="layer-item ${isExpanded ? 'expanded active' : ''}" data-name="${layer.name}">
                 <div class="layer-item-main">
@@ -93,6 +147,7 @@ export default {
                     </div>
                     <span class="material-icons layer-item-actions-toggle">expand_more</span>
                 </div>
+                ${metadataHtml}
                 <div class="layer-actions-panel">
                     ${zoomButton}
                     ${dynamicActions}
