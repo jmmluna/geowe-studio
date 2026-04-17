@@ -8,10 +8,22 @@ export default {
     const BUTTON_ID = 'open-layer-manager';
 
     ctx.ui.addStyles(`
-      .layer-manager-container { display: flex; flex-direction: column; background: #fff; height: 100%; font-family: 'Inter', sans-serif; }
-      .layer-manager-header { padding: 16px; border-bottom: 1px solid #edf2f7; background: #fafbfc; }
+      .layer-manager-container-outer { overflow: hidden; width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; }
+      .layer-manager-wrapper { display: flex; width: 200%; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+      .layer-manager-wrapper.inspecting { transform: translateX(-50%); }
+      
+      .view-list { width: 50%; display: flex; flex-direction: column; background: #fff; height: 100%; font-family: 'Inter', sans-serif; overflow: hidden; }
+      .view-inspector { width: 50%; display: flex; flex-direction: column; background: #fdfdfe; height: 100%; font-family: 'Inter', sans-serif; overflow: hidden; }
+      
+      /* Header general */
+      .layer-manager-header { height: 72px; padding: 16px; border-bottom: 1px solid #edf2f7; background: #fafbfc; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
       .layer-manager-title { font-size: 16px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
       .layer-manager-subtitle { font-size: 12px; color: #718096; }
+      
+      /* Botón volver en inspector */
+      .back-btn { display: flex; align-items: center; gap: 4px; color: #3182ce; font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: background 0.2s; border: none; background: transparent; margin-left: -8px; }
+      .back-btn:hover { background: #ebf8ff; }
+      .back-btn .material-icons { font-size: 18px; }
       
       .layer-list { flex: 1; overflow-y: auto; padding: 8px; }
       .layer-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 8px; transition: all 0.2s; overflow: hidden; }
@@ -32,41 +44,110 @@ export default {
       .layer-actions-panel { background: #f8fafc; border-top: 1px solid #edf2f7; display: none; padding: 8px; grid-template-columns: repeat(2, 1fr); gap: 6px; }
       .layer-item.expanded .layer-actions-panel { display: grid; }
       
-      .layer-action-btn { display: flex; align-items: center; gap: 8px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; font-weight: 600; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+      .layer-action-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; font-weight: 600; color: #4a5568; cursor: pointer; transition: all 0.2s; }
       .layer-action-btn:hover { background: #edf2f7; color: #3182ce; border-color: #bee3f8; }
       .layer-action-btn .material-icons { font-size: 16px; }
       .layer-action-btn.danger:hover { color: #e53e3e; border-color: #fed7d7; background: #fff5f5; }
       
-      .layer-info-card { background: #fdfdfe; border-top: 1px solid #edf2f7; display: none; padding: 12px; }
-      .layer-item.expanded .layer-info-card { display: block; }
-      .layer-info-header { font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .info-item { display: flex; align-items: flex-start; gap: 6px; }
-      .info-item .material-icons { font-size: 14px; color: #a0aec0; margin-top: 1px; }
+      /* Inspector PRO */
+      .inspector-content { padding: 24px 16px; flex: 1; overflow-y: auto; background: #fdfdfe; }
+      .inspector-icon-wrap { width: 64px; height: 64px; background: #ebf8ff; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #3182ce; }
+      .inspector-icon-wrap .material-icons { font-size: 32px; }
+      .inspector-layer-name { font-size: 20px; font-weight: 800; color: #1a202c; word-break: break-all; line-height: 1.2; margin-bottom: 4px; }
+      .inspector-layer-type { font-size: 12px; font-weight: 600; color: #3182ce; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 24px; }
+      
+      .info-grid { display: flex; flex-direction: column; gap: 16px; background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #edf2f7; box-shadow: 0 1px 3px rgba(0,0,0,0.01); }
+      .info-item { display: flex; align-items: flex-start; gap: 12px; }
+      .info-item .material-icons { font-size: 20px; color: #a0aec0; margin-top: 2px; }
       .info-item-content { flex: 1; min-width: 0; }
-      .info-item-label { font-size: 10px; color: #718096; margin-bottom: 2px; }
-      .info-item-value { font-size: 11px; font-weight: 600; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .info-item-label { font-size: 11px; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+      .info-item-value { font-size: 13px; font-weight: 500; color: #2d3748; word-break: break-word; }
 
       .layer-manager-empty { text-align: center; padding: 40px 20px; color: #a0aec0; }
       .layer-manager-empty .material-icons { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.3; }
     `);
 
     let expandedLayerName: string | null = null;
+    let inspectedLayerName: string | null = null;
 
     const getSidebarContent = () => {
       const layers = ctx.layers.getAll();
+      
+      let inspectorHtml = '<div class="view-inspector"></div>';
+      const inspectedLayer = inspectedLayerName ? layers.find(l => l.name === inspectedLayerName) : null;
+      
+      if (inspectedLayer && inspectedLayer.metadata) {
+          inspectorHtml = `
+            <div class="view-inspector">
+                <div class="layer-manager-header">
+                    <button class="back-btn"><span class="material-icons">arrow_back_ios_new</span> Volver</button>
+                    <div class="layer-manager-title" style="flex:1; text-align:right;">Inspector</div>
+                </div>
+                <div class="inspector-content">
+                    <div class="inspector-icon-wrap">
+                        <span class="material-icons">${inspectedLayer.type === 'vector' ? 'share_location' : 'image'}</span>
+                    </div>
+                    <div class="inspector-layer-name">${inspectedLayer.name}</div>
+                    <div class="inspector-layer-type">${inspectedLayer.type} layer</div>
+                    
+                    <div class="info-grid">
+                        ${inspectedLayer.metadata.srs ? `
+                        <div class="info-item">
+                            <span class="material-icons">architecture</span>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Proyección (SRC)</div>
+                                <div class="info-item-value">${inspectedLayer.metadata.srs}</div>
+                            </div>
+                        </div>` : ''}
+                        ${inspectedLayer.metadata.format ? `
+                        <div class="info-item">
+                            <span class="material-icons">data_object</span>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Formato Original</div>
+                                <div class="info-item-value">${inspectedLayer.metadata.format}</div>
+                            </div>
+                        </div>` : ''}
+                        ${inspectedLayer.metadata.count !== undefined ? `
+                        <div class="info-item">
+                            <span class="material-icons">functions</span>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Entidades Geométricas</div>
+                                <div class="info-item-value">${inspectedLayer.metadata.count} features</div>
+                            </div>
+                        </div>` : ''}
+                        ${inspectedLayer.metadata.filename ? `
+                        <div class="info-item">
+                            <span class="material-icons">folder_open</span>
+                            <div class="info-item-content">
+                                <div class="info-item-label">Archivo Fuente</div>
+                                <div class="info-item-value">${inspectedLayer.metadata.filename}</div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>
+            </div>
+          `;
+      }
+
       if (layers.length === 0) {
         return `
-          <div class="layer-manager-container">
-            <div class="layer-manager-header">
-                <div class="layer-manager-title">Capas</div>
-                <div class="layer-manager-subtitle">No hay capas cargadas</div>
-            </div>
-            <div class="layer-manager-empty">
-                <span class="material-icons">layers_clear</span>
-                <p>El mapa está vacío.</p>
-                <p style="font-size:12px">Añada capas desde el catálogo o el marketplace.</p>
-            </div>
+          <div class="layer-manager-container-outer">
+             <div class="layer-manager-wrapper">
+                <div class="view-list">
+                    <div class="layer-manager-header">
+                        <div>
+                            <div class="layer-manager-title">Capas</div>
+                            <div class="layer-manager-subtitle">No hay capas cargadas</div>
+                        </div>
+                    </div>
+                    <div class="layer-manager-empty">
+                        <span class="material-icons">layers_clear</span>
+                        <p>El mapa está vacío.</p>
+                        <p style="font-size:12px">Añada capas desde el catálogo o el hub.</p>
+                    </div>
+                </div>
+                ${inspectorHtml}
+             </div>
           </div>
         `;
       }
@@ -92,49 +173,12 @@ export default {
             </button>
         ` : '';
 
-        // Construcción de la tarjeta de metadatos PRO
-        let metadataHtml = '';
-        if (layer.metadata) {
-          metadataHtml = `
-            <div class="layer-info-card">
-                <div class="layer-info-header">Información Técnica</div>
-                <div class="info-grid">
-                    ${layer.metadata.srs ? `
-                    <div class="info-item">
-                        <span class="material-icons">share_location</span>
-                        <div class="info-item-content">
-                            <div class="info-item-label">Proyección (SRC)</div>
-                            <div class="info-item-value" title="${layer.metadata.srs}">${layer.metadata.srs}</div>
-                        </div>
-                    </div>` : ''}
-                    ${layer.metadata.format ? `
-                    <div class="info-item">
-                        <span class="material-icons">description</span>
-                        <div class="info-item-content">
-                            <div class="info-item-label">Formato</div>
-                            <div class="info-item-value" title="${layer.metadata.format}">${layer.metadata.format}</div>
-                        </div>
-                    </div>` : ''}
-                    ${layer.metadata.count !== undefined ? `
-                    <div class="info-item">
-                        <span class="material-icons">data_object</span>
-                        <div class="info-item-content">
-                            <div class="info-item-label">Entidades</div>
-                            <div class="info-item-value">${layer.metadata.count} features</div>
-                        </div>
-                    </div>` : ''}
-                    ${layer.metadata.filename ? `
-                    <div class="info-item" style="grid-column: span 2;">
-                        <span class="material-icons">folder</span>
-                        <div class="info-item-content">
-                            <div class="info-item-label">Archivo de origen</div>
-                            <div class="info-item-value" title="${layer.metadata.filename}">${layer.metadata.filename}</div>
-                        </div>
-                    </div>` : ''}
-                </div>
-            </div>
-          `;
-        }
+        const infoButton = layer.metadata ? `
+            <button class="layer-action-btn layer-info-btn" data-name="${layer.name}">
+                <span class="material-icons">info</span>
+                <span>Inspector</span>
+            </button>
+        ` : '';
 
         return `
             <div class="layer-item ${isExpanded ? 'expanded active' : ''}" data-name="${layer.name}">
@@ -147,8 +191,8 @@ export default {
                     </div>
                     <span class="material-icons layer-item-actions-toggle">expand_more</span>
                 </div>
-                ${metadataHtml}
                 <div class="layer-actions-panel">
+                    ${infoButton}
                     ${zoomButton}
                     ${dynamicActions}
                     <button class="layer-action-btn danger layer-remove-btn" data-name="${layer.name}">
@@ -161,12 +205,19 @@ export default {
       }).join('');
 
       return `
-        <div class="layer-manager-container">
-            <div class="layer-manager-header">
-                <div class="layer-manager-title">Capas</div>
-                <div class="layer-manager-subtitle">${layers.length} capas registradas</div>
+        <div class="layer-manager-container-outer">
+            <div class="layer-manager-wrapper ${inspectedLayerName ? 'inspecting' : ''}">
+                <div class="view-list">
+                    <div class="layer-manager-header">
+                        <div>
+                            <div class="layer-manager-title">Capas</div>
+                            <div class="layer-manager-subtitle">${layers.length} capas registradas</div>
+                        </div>
+                    </div>
+                    <div class="layer-list">${layerItems}</div>
+                </div>
+                ${inspectorHtml}
             </div>
-            <div class="layer-list">${layerItems}</div>
         </div>
       `;
     };
@@ -192,7 +243,25 @@ export default {
             return;
         }
 
-        // 3. Acciones dinámicas
+        // 3. Info button click (Abrir Inspector)
+        const infoBtn = target.closest('.layer-info-btn') as HTMLElement;
+        if (infoBtn) {
+            e.stopPropagation();
+            inspectedLayerName = infoBtn.getAttribute('data-name');
+            refresh();
+            return;
+        }
+
+        // 4. Back button click (Cerrar Inspector)
+        const backBtn = target.closest('.back-btn') as HTMLElement;
+        if (backBtn) {
+            e.stopPropagation();
+            inspectedLayerName = null;
+            refresh();
+            return;
+        }
+
+        // 5. Acciones dinámicas
         const dynamicBtn = target.closest('.dynamic-layer-action') as HTMLElement;
         if (dynamicBtn) {
             e.stopPropagation();
