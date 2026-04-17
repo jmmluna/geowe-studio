@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GeoWEPlugin, PluginContext } from './plugin-context';
 import { EventBusService } from './event-bus.service';
+import { GisService } from './gis.service';
 import JSZip from 'jszip';
 import { MapSDK } from './ol-sdk';
 
@@ -40,7 +41,7 @@ export class PluginManagerService {
   }
 
 
-  constructor(private eventBus: EventBusService) { }
+  constructor(private eventBus: EventBusService, private gisService: GisService) { }
 
   public initContext(mapInstance: any, appInfo: { title: string, logo: string } = { title: 'GeoWE Studio', logo: 'logo-geowe.png' }) {
     this.olMap = mapInstance;
@@ -84,7 +85,8 @@ export class PluginManagerService {
               name,
               type,
               visible: layer.getVisible(),
-              color
+              color,
+              metadata: layer.get('metadata') // Extraemos los metadatos PRO 
             };
           });
         },
@@ -97,8 +99,8 @@ export class PluginManagerService {
         },
         zoomToLayer: (name: string) => {
           const layer = this.olMap.getLayers().getArray().find((l: any) => l.get('name') === name);
-          if (layer && layer.getSource()?.getExtent) {
-            this.olMap.getView().fit(layer.getSource().getExtent(), { padding: [50, 50, 50, 50], duration: 1000 });
+          if (layer) {
+            this.gisService.zoomToLayer(layer);
           }
         }
       },

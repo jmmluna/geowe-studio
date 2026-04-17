@@ -27,6 +27,7 @@ export interface LayerInfo {
   type: 'raster' | 'vector';
   visible: boolean;
   color?: string;
+  metadata?: any;
 }
 
 export interface LayerAPI {

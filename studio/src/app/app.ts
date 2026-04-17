@@ -1,27 +1,13 @@
 import { Component, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import Map from 'ol/Map';
-import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import ImageLayer from 'ol/layer/Image';
-import VectorLayer from 'ol/layer/Vector';
-import ImageWMS from 'ol/source/ImageWMS';
-import VectorSource from 'ol/source/Vector';
-import GeoJSON from 'ol/format/GeoJSON';
-import KML from 'ol/format/KML';
-import GPX from 'ol/format/GPX';
-import WKT from 'ol/format/WKT';
-import OSM from 'ol/source/OSM';
-import { fromLonLat } from 'ol/proj';
 import { ProjectionRegistry } from './core/projection-registry';
-import { Style, Fill, Stroke } from 'ol/style';
-import { ScaleLine } from 'ol/control';
 import { PluginManagerService } from './core/plugin-manager.service';
 
 import { EventBusService, GeoEvent } from './core/event-bus.service';
 import { SplashScreenComponent } from './core/components/splash-screen/splash-screen.component';
 import { ProjectionSelectorComponent } from './core/components/projection-selector/projection-selector.component';
+import { GisService } from './core/gis.service';
 
 import LayerCatalogPlugin from './plugins/layer-catalog.plugin';
 import LayerManagerPlugin from './plugins/layer-manager.plugin';
@@ -60,11 +46,12 @@ export class App implements OnInit {
     return item.id;
   }
 
-  public map!: Map;
+  public map!: any;
 
   constructor(
 
     private pluginManager: PluginManagerService,
+    private gisService: GisService,
     private eventBus: EventBusService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer
@@ -148,78 +135,19 @@ export class App implements OnInit {
       this.cdr.detectChanges();
     });
     this.eventBus.on('layer:addWMS', (payload: any) => {
-      const wmsLayer = new ImageLayer({
-        source: new ImageWMS({
-          url: payload.url,
-          params: payload.params,
-        }),
-        properties: {
-          name: payload.name,
-          type: 'raster'
-        }
-      });
-      this.map.addLayer(wmsLayer);
-      this.eventBus.emit({ type: 'layer:changed' });
+      this.gisService.addWMSLayer(payload);
     });
 
     this.eventBus.on('layer:addVector', (payload: any) => {
-      const vectorSource = new VectorSource({
-        features: new GeoJSON().readFeatures(payload.geojson, {
-          featureProjection: this.map.getView().getProjection()
-        })
-      });
-
-      const vectorLayer = new VectorLayer({
-        source: vectorSource,
-        properties: {
-          name: payload.name,
-          type: 'vector',
-          color: '#3498db'
-        },
-        style: new Style({
-          fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),
-          stroke: new Stroke({ color: '#3498db', width: 2 }),
-        })
-      });
-
-      this.map.addLayer(vectorLayer);
-      this.eventBus.emit({ type: 'layer:changed' });
-
-      // Auto zoom to layer extent
-      const extent = vectorSource.getExtent();
-      if (extent) {
-        this.map.getView().fit(extent, {
-          padding: [50, 50, 50, 50],
-          duration: 1000
-        });
-      }
+      this.gisService.addVectorLayer(payload);
     });
 
     this.eventBus.on('layer:remove', (payload: any) => {
-      const layers = this.map.getLayers().getArray();
-      const layerToRemove = layers.find((l: any) => l.get('name') === payload.name);
-      if (layerToRemove) {
-        this.map.removeLayer(layerToRemove);
-        this.eventBus.emit({ type: 'layer:changed' });
-      }
+      this.gisService.removeLayerByName(payload.name);
     });
 
     this.eventBus.on('layer:setStyle', (payload: { name: string, style: any }) => {
-      const layers = this.map.getLayers().getArray();
-      const layer = layers.find((l: any) => l.get('name') === payload.name);
-      
-      if (layer && typeof (layer as any).setStyle === 'function') {
-        const s = payload.style;
-        (layer as any).setStyle(new Style({
-          fill: new Fill({ color: s.fill || 'rgba(52, 152, 219, 0.2)' }),
-          stroke: new Stroke({ 
-            color: s.stroke || '#3498db', 
-            width: s.width || 2 
-          }),
-        }));
-        // Notificar cambio para refrescar leyenda en layer-manager
-        this.eventBus.emit({ type: 'layer:changed' });
-      }
+      this.gisService.updateLayerStyle(payload);
     });
 
     this.pluginManager.pluginContext.ui.setStatus('Inicializando plataforma GeoWE...');
@@ -258,22 +186,7 @@ export class App implements OnInit {
 
 
   private initMap() {
-    this.map = new Map({
-      target: this.mapElement.nativeElement,
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-          properties: { name: "OSM" }
-        })
-      ],
-      view: new View({
-        center: fromLonLat([-3.703790, 40.416775]), // Madrid
-        zoom: 6
-      }),
-      controls: [
-        new ScaleLine()
-      ]
-    });
+    this.map = this.gisService.createMap(this.mapElement.nativeElement);
   }
 
   private loadInternalPlugin() {
@@ -354,88 +267,24 @@ export class App implements OnInit {
   }
 
   private async processSpatialFile(file: File) {
-    const reader = new FileReader();
+    try {
+      this.pluginManager.pluginContext.ui.setStatus(`Cargando archivo: ${file.name}...`);
 
-    reader.onload = async (e: any) => {
-      const text = e.target.result;
-      const fileName = file.name.toLowerCase();
-      let features: any[] = [];
-      let format: any = null;
+      await this.gisService.loadFile(file, (filename, detection) => {
+        return this.showProjectionSelector(filename, detection);
+      });
 
-      try {
-        if (fileName.endsWith('.kml')) {
-          format = new KML();
-        } else if (fileName.endsWith('.gpx')) {
-          format = new GPX();
-        } else if (fileName.endsWith('.wkt')) {
-          format = new WKT();
-        } else {
-          format = new GeoJSON();
-        }
-
-        const detection = ProjectionRegistry.detectProjection(text, file.name);
-        let sourceProjection = detection.code;
-
-        // Si no estamos seguros de la proyección, preguntamos al usuario
-        if (!detection.isConfident) {
-          sourceProjection = await this.showProjectionSelector(file.name, detection);
-        }
-
-        features = format.readFeatures(text, {
-          dataProjection: sourceProjection,
-          featureProjection: this.map.getView().getProjection()
-        });
-
-        if (features && features.length > 0) {
-          const vectorSource = new VectorSource({
-            features: features
-          });
-
-          const name = file.name.replace(/\.[^/.]+$/, ""); // Quitar extensión
-
-          const vectorLayer = new VectorLayer({
-            source: vectorSource,
-            properties: {
-              name: name,
-              type: 'vector',
-              color: '#3498db'
-            },
-            style: new Style({
-              fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),
-              stroke: new Stroke({ color: '#3498db', width: 2 }),
-            })
-          });
-
-          this.map.addLayer(vectorLayer);
-          this.eventBus.emit({ type: 'layer:changed' });
-
-          // Auto zoom to layer extent
-          const extent = vectorSource.getExtent();
-          if (extent) {
-            this.map.getView().fit(extent, {
-              padding: [50, 50, 50, 50],
-              duration: 1000
-            });
-          }
-
-          this.pluginManager.pluginContext.ui.setStatus(`Capa cargada: ${name} (${features.length} elementos) en ${sourceProjection}`);
-        } else {
-          this.pluginManager.pluginContext.ui.setStatus(`Error: No se encontraron datos válidos en ${file.name}`);
-        }
-
-      } catch (err: any) {
-        console.error('Error al procesar archivo GIS:', err);
-        this.pluginManager.pluginContext.ui.setStatus(`Error al leer archivo: ${err.message}`);
-      }
-    };
-
-    reader.readAsText(file);
+      this.pluginManager.pluginContext.ui.setStatus(`Archivo cargado con éxito: ${file.name}`);
+    } catch (err: any) {
+      console.error('Error al procesar archivo GIS:', err);
+      this.pluginManager.pluginContext.ui.setStatus(`Error al leer archivo: ${err.message}`);
+    }
   }
 
   private showProjectionSelector(filename: string, detection: any): Promise<string> {
     return new Promise((resolve) => {
       const modalId = 'projection-selector-' + Date.now();
-      
+
       this.pluginManager.pluginContext.ui.addModal({
         id: modalId,
         title: `PROYECCIÓN (EPSG)`,
@@ -465,7 +314,7 @@ export class App implements OnInit {
         if (!file) continue;
 
         const fileName = file.name.toLowerCase();
-        
+
         if (STUDIO_EXTS.some(ext => fileName.endsWith(ext))) {
           this.pluginManager.loadLocalPlugin(file);
         } else if (GIS_EXTS.some(ext => fileName.endsWith(ext))) {
