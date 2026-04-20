@@ -306,7 +306,7 @@ export class App implements OnInit {
 
   public onFileDropped(files: FileList) {
     if (files && files.length > 0) {
-      const STUDIO_EXTS = ['.gplugin', '.gext', '.gapp', '.zip'];
+      const STUDIO_EXTS = ['.gplugin', '.gext', '.gapp', '.zip', '.js'];
       const GIS_EXTS = ['.geojson', '.json', '.kml', '.gpx', '.wkt'];
 
       for (let i = 0; i < files.length; i++) {
@@ -320,8 +320,16 @@ export class App implements OnInit {
         } else if (GIS_EXTS.some(ext => fileName.endsWith(ext))) {
           this.processSpatialFile(file);
         } else {
-          this.statusMessage = `Error: El archivo "${file.name}" no es un formato válido para GeoWE Studio.`;
-          this.pluginManager.pluginContext.ui.setStatus(this.statusMessage);
+          let handled = false;
+          this.eventBus.emit({
+            type: 'app:unhandledDrop',
+            payload: { file, markHandled: () => handled = true }
+          });
+
+          if (!handled) {
+            this.statusMessage = `Error: El archivo "${file.name}" no es un formato válido para GeoWE Studio.`;
+            this.pluginManager.pluginContext.ui.setStatus(this.statusMessage);
+          }
         }
       }
     }
