@@ -198,7 +198,8 @@ export class GisService {
         properties: {
           name: payload.name,
           type: 'vector',
-          color: '#3498db'
+          color: '#3498db',
+          metadata: payload.metadata
         },
         style: new Style({
           fill: new Fill({ color: 'rgba(52, 152, 219, 0.2)' }),

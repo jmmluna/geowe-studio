@@ -56,8 +56,8 @@ export class PluginManagerService {
         addWMSLayer: (name: string, url: string, params: any) => {
           this.eventBus.emit({ type: 'layer:addWMS', payload: { name, url, params } });
         },
-        addVectorLayer: (name: string, geojson: any) => {
-          this.eventBus.emit({ type: 'layer:addVector', payload: { name, geojson } });
+        addVectorLayer: (name: string, geojson: any, metadata?: any) => {
+          this.eventBus.emit({ type: 'layer:addVector', payload: { name, geojson, metadata } });
         },
         removeLayer: (name: string) => {
           this.eventBus.emit({ type: 'layer:remove', payload: { name } });
@@ -260,6 +260,9 @@ export class PluginManagerService {
       events: {
         on: (type: string, handler: (payload: any) => void) => {
           this.eventBus.on(type, handler);
+        },
+        off: (type: string, handler: (payload: any) => void) => {
+          this.eventBus.off(type, handler);
         },
         emit: (type: string, payload?: any) => {
           this.eventBus.emit({ type, payload });

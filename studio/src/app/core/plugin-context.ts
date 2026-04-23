@@ -32,7 +32,7 @@ export interface LayerInfo {
 
 export interface LayerAPI {
   addWMSLayer: (name: string, url: string, params: any) => void;
-  addVectorLayer: (name: string, geojson: any) => void;
+  addVectorLayer: (name: string, geojson: any, metadata?: any) => void;
   removeLayer: (name: string) => void;
   getAll: () => any[];
   setVisible: (name: string, visible: boolean) => void;
@@ -83,6 +83,7 @@ export interface CommandBus {
 
 export interface EventBusAPI {
   on: (type: string, handler: (payload: any) => void) => void;
+  off: (type: string, handler: (payload: any) => void) => void;
   emit: (type: string, payload?: any) => void;
 }
 

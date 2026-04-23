@@ -1,0 +1,8 @@
+{
+  "id": "gpkg-loader",
+  "name": "GeoPackage Loader",
+  "version": "1.0.0",
+  "description": "Drag & drop support for GeoPackage files",
+  "author": "GeoWE",
+  "entry": "index.js"
+}
