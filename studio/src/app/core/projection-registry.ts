@@ -69,7 +69,7 @@ export class ProjectionRegistry {
 
     // 2. Detección en WKT
     if (fileNameLower.endsWith('.wkt')) {
-      const match = content.match(/AUTHORITY\["EPSG","(\d+)"\]/i);
+      const match = content.match(/AUTHORITY\["EPSG","(\d+)"\]/i) || content.match(/# EPSG:(\d+)/i);
       if (match) return { code: `EPSG:${match[1]}`, isConfident: true, probableType: 'projected' };
     }
 

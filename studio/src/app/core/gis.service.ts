@@ -78,18 +78,44 @@ export class GisService {
           }
 
           // Parseo de features
-          const features = formatInfo.format.readFeatures(text, {
+          let dataToParse = text;
+          if (fileName.toLowerCase().endsWith('.wkt')) {
+            // Eliminar líneas de comentarios que empiezan por # para que WKT.readFeatures no falle
+            dataToParse = text.replace(/^#.*$/gm, '').trim();
+          }
+
+          const features = formatInfo.format.readFeatures(dataToParse, {
             dataProjection: sourceProjection,
             featureProjection: this.map.getView().getProjection()
           });
 
           if (features && features.length > 0) {
+            // Aplanado de colecciones (útil para WKT que exporta 8 entidades como 1 colección)
+            let processedFeatures = features;
+            if (fileName.toLowerCase().endsWith('.wkt')) {
+               const flattened: any[] = [];
+               features.forEach((f: any) => {
+                 const geom = f.getGeometry();
+                 if (geom && geom.getType() === 'GeometryCollection') {
+                    // Extraer cada geometría como una entidad independiente
+                    geom.getGeometries().forEach((g: any) => {
+                       const newFeature = f.clone();
+                       newFeature.setGeometry(g);
+                       flattened.push(newFeature);
+                    });
+                 } else {
+                    flattened.push(f);
+                 }
+               });
+               processedFeatures = flattened;
+            }
+
             const name = fileName.replace(/\.[^/.]+$/, "");
             
-            const vectorLayer = this.createVectorLayer(name, features, {
+            const vectorLayer = this.createVectorLayer(name, processedFeatures, {
                 format: formatInfo.name,
                 srs: sourceProjection,
-                count: features.length,
+                count: processedFeatures.length,
                 filename: fileName
             });
 
@@ -151,11 +177,20 @@ export class GisService {
    * Centra el mapa en una extensión específica.
    */
   public zoomToExtent(extent: any) {
-    if (extent && this.map) {
-      this.map.getView().fit(extent, {
-        padding: [50, 50, 50, 50],
-        duration: 800
-      });
+    if (extent && this.map && 
+        isFinite(extent[0]) && isFinite(extent[1]) && 
+        isFinite(extent[2]) && isFinite(extent[3]) &&
+        extent[0] !== Infinity && extent[2] !== -Infinity) {
+      try {
+        this.map.getView().fit(extent, {
+          padding: [50, 50, 50, 50],
+          duration: 800
+        });
+      } catch (e) {
+        console.warn('No se pudo ajustar la vista a la extensión:', extent, e);
+      }
+    } else {
+      console.warn('Intento de zoom a extensión inválida:', extent);
     }
   }
 
@@ -164,7 +199,7 @@ export class GisService {
    */
   private getFormatForFile(fileName: string): { format: any, name: string } | null {
     const lower = fileName.toLowerCase();
-    if (lower.endsWith('.kml')) return { format: new KML(), name: 'KML' };
+    if (lower.endsWith('.kml')) return { format: new KML({ extractStyles: true }), name: 'KML' };
     if (lower.endsWith('.gpx')) return { format: new GPX(), name: 'GPX' };
     if (lower.endsWith('.wkt')) return { format: new WKT(), name: 'WKT' };
     // Por defecto asumimos GeoJSON para otras extensiones .json / .geojson
@@ -218,6 +253,13 @@ export class GisService {
       
       if (layer && typeof (layer as any).setStyle === 'function') {
         const s = payload.style;
+        
+        // Limpiamos los estilos individuales de las features para que el estilo de capa mande
+        const source = (layer as any).getSource();
+        if (source && source.getFeatures) {
+            source.getFeatures().forEach((f: any) => f.setStyle(null));
+        }
+
         (layer as any).setStyle(new Style({
           fill: new Fill({ color: s.fill || 'rgba(52, 152, 219, 0.2)' }),
           stroke: new Stroke({ 
