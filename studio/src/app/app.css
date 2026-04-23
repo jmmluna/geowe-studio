@@ -444,28 +444,50 @@
 }
 
 .status-bar {
-  background: rgba(44, 62, 80, 0.95);
-  color: rgb(251, 250, 250);
-  padding: 8px 16px;
-  border-radius: 30px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 12px 24px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  gap: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: slideDownFade 0.3s ease-out;
+  animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 600px;
+}
+
+.status-bar.is-error {
+  border-left: 4px solid #ef4444;
+  background: rgba(69, 10, 10, 0.95);
 }
 
 .status-bar .material-icons {
-  font-size: 18px;
+  font-size: 20px;
   color: var(--geowe-accent);
 }
 
+.status-bar.is-error .material-icons {
+  color: #ef4444;
+}
+
 .status-bar span {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
+  line-height: 1.4;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .status-close {

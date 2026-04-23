@@ -33,6 +33,7 @@ export class App implements OnInit {
   public sidebarPanels: any[] = [];
   public activeSidebarId = 'default';
   public statusMessage: string = '';
+  private statusTimeout: any;
   public isSidebarVisible = true;
 
   // Propiedades de la Aplicación (.gapp)
@@ -81,6 +82,18 @@ export class App implements OnInit {
     this.eventBus.on('ui:statusChanged', (message: string) => {
       this.statusMessage = message;
       this.cdr.detectChanges();
+
+      if (this.statusTimeout) {
+        clearTimeout(this.statusTimeout);
+      }
+
+      // Auto-ocultar mensajes que no sean errores críticos después de 4 segundos
+      if (message && !message.toLowerCase().includes('error')) {
+        this.statusTimeout = setTimeout(() => {
+          this.statusMessage = '';
+          this.cdr.detectChanges();
+        }, 4000);
+      }
     });
 
     this.eventBus.on('ui:sidebarSectionsChanged', () => {

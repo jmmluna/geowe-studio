@@ -94,10 +94,10 @@
 
     <!-- Barra de Estado de Plugins -->
     <div *ngIf="statusMessage" class="status-bar-container">
-      <div class="status-bar">
-        <span class="material-icons">info</span>
+      <div class="status-bar" [class.is-error]="statusMessage.toLowerCase().includes('error')">
+        <span class="material-icons">{{ statusMessage.toLowerCase().includes('error') ? 'error_outline' : 'info' }}</span>
         <span>{{ statusMessage }}</span>
-        <button (click)="statusMessage = ''" class="status-close">×</button>
+        <button (click)="statusMessage = '';" class="status-close">×</button>
       </div>
     </div>
 
